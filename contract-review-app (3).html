@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>怡業集團 跨境合約風險審閱工作台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#15233a;
+  --ink-2:#22324c;
+  --paper:#eef1ee;
+  --card:#fbfbf9;
+  --seal:#a8362a;
+  --seal-bg:#f6e7e4;
+  --brass:#a8762a;
+  --brass-bg:#f6ecda;
+  --jade:#3c7a5c;
+  --jade-bg:#e6f0ea;
+  --text:#1f2430;
+  --muted:#646b78;
+  --line:#d9dcd4;
+  --mono:'IBM Plex Mono', monospace;
+  --serif:'Noto Serif TC', serif;
+  --sans:'Noto Sans TC', sans-serif;
+}
+*{box-sizing:border-box;}
+[hidden]{display:none !important;}
+body{margin:0; font-family:var(--sans); background:var(--paper); color:var(--text); -webkit-font-smoothing:antialiased;}
+.page{max-width:920px; margin:0 auto; padding:0 0 64px;}
+
+.letterhead{background:var(--ink); color:#eef0ea; padding:26px 30px 16px;}
+.letterhead-inner{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;}
+.brand{display:flex; gap:14px; align-items:center;}
+.brand-mark{width:46px; height:46px; min-width:46px; border:2px solid #c9a24a; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:21px; color:#c9a24a;}
+.brand-zh{font-family:var(--serif); font-size:18px; font-weight:600; letter-spacing:.02em;}
+.brand-en{font-family:var(--mono); font-size:11px; letter-spacing:.07em; color:#a9b3c4; margin-top:3px; text-transform:uppercase;}
+.case-meta{font-family:var(--mono); font-size:12px; color:#c7cdd9; text-align:right; line-height:1.7;}
+.case-meta span{color:#e7c878;}
+.letterhead-sub{margin-top:14px; padding-top:12px; border-top:1px solid #34435c; font-size:12.5px; color:#b7c0d0; letter-spacing:.02em;}
+
+main{padding:26px 22px 0;}
+.card{background:var(--card); border:1px solid var(--line); border-radius:6px; padding:24px 26px; margin-bottom:20px; box-shadow:0 1px 0 rgba(20,30,40,0.03);}
+.section-title{font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; color:var(--ink); text-transform:uppercase; margin:0 0 18px; padding-bottom:10px; border-bottom:1px solid var(--line);}
+
+.field{margin-bottom:16px;}
+.field label{display:block; font-size:13px; font-weight:600; color:var(--ink-2); margin-bottom:6px;}
+.req{color:var(--seal);}
+textarea, select, input[type=text]{
+  width:100%; font-family:var(--sans); font-size:14px; color:var(--text);
+  border:1px solid var(--line); border-radius:4px; padding:10px 12px; background:#fff;
+}
+textarea{resize:vertical; line-height:1.65;}
+textarea:focus, select:focus, input:focus{outline:2px solid var(--brass); outline-offset:1px; border-color:var(--brass);}
+.field-actions{display:flex; justify-content:space-between; align-items:center; margin-top:6px;}
+.char-count{font-family:var(--mono); font-size:11px; color:var(--muted);}
+.field-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:16px;}
+@media (max-width:680px){.field-grid{grid-template-columns:1fr;}}
+
+.dropzone{border:2px dashed var(--line); border-radius:6px; padding:26px 18px; text-align:center; cursor:pointer; background:#fff; transition:border-color .15s, background .15s;}
+.dropzone:hover, .dropzone:focus-visible{border-color:var(--brass); background:#fdf9f0; outline:none;}
+.dropzone.dragover{border-color:var(--brass); background:var(--brass-bg);}
+.dropzone-icon{font-size:26px; margin-bottom:6px;}
+.dropzone-text{font-size:14px; color:var(--ink-2); font-weight:600;}
+.dropzone-link{color:var(--seal); text-decoration:underline;}
+.dropzone-sub{margin-top:9px; font-size:11.5px; color:var(--muted); line-height:1.8;}
+.fmt-badge{display:inline-block; font-family:var(--mono); font-size:10px; font-weight:700; color:var(--ink-2); background:#eceee9; border:1px solid var(--line); border-radius:3px; padding:1px 6px; margin:0 2px;}
+
+.file-chip{display:flex; align-items:center; gap:12px; border:1px solid var(--line); border-left:4px solid var(--ink); border-radius:4px; padding:10px 14px; background:#fff; margin-top:10px;}
+.file-chip.parsing{border-left-color:var(--brass);}
+.file-chip.success{border-left-color:var(--jade);}
+.file-chip.error{border-left-color:var(--seal);}
+.file-icon{font-size:20px; min-width:24px; text-align:center; flex-shrink:0;}
+.file-meta{flex:1; min-width:0;}
+.file-name{font-weight:600; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.file-sub{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:3px; line-height:1.5;}
+.file-sub.parsing{color:var(--brass);}
+.file-sub.success{color:var(--jade);}
+.file-sub.error{color:var(--seal);}
+.file-remove-btn{font-family:var(--sans); font-size:12px; font-weight:600; color:var(--muted); background:transparent; border:1px solid var(--line); border-radius:4px; padding:6px 10px; cursor:pointer; flex-shrink:0;}
+.file-remove-btn:hover{color:var(--seal); border-color:var(--seal);}
+
+.divider-or{display:flex; align-items:center; gap:12px; margin:16px 0 10px; font-size:11.5px; color:var(--muted);}
+.divider-or::before, .divider-or::after{content:''; flex:1; height:1px; background:var(--line);}
+
+.ghost-btn{background:transparent; border:1px solid var(--ink); color:var(--ink); font-family:var(--sans); font-size:13px; font-weight:600; padding:8px 14px; border-radius:4px; cursor:pointer;}
+.ghost-btn:hover{background:var(--ink); color:#fff;}
+.primary-btn{background:var(--seal); color:#fff; border:none; font-family:var(--sans); font-weight:700; font-size:14.5px; padding:12px 26px; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:10px;}
+.primary-btn:hover{background:#8d2c22;}
+.primary-btn:disabled{background:#b9bcc2; cursor:not-allowed;}
+.stamp-icon{display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border:1.5px solid #fff; border-radius:50%; font-family:var(--serif); font-size:12px; transform:rotate(-8deg); flex-shrink:0;}
+.submit-row{display:flex; align-items:center; gap:16px; margin-top:6px; flex-wrap:wrap;}
+.status-line{font-family:var(--mono); font-size:12.5px; color:var(--muted);}
+
+.info-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:2px 24px;}
+@media (max-width:680px){.info-grid{grid-template-columns:1fr;}}
+.info-row{display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px dashed var(--line); font-size:13.5px;}
+.info-label{color:var(--muted); font-weight:600; white-space:nowrap;}
+.info-value{color:var(--text); text-align:right;}
+
+.risk-banner{display:flex; align-items:center; gap:20px; padding:18px 2px 4px;}
+.risk-note{font-size:14px; line-height:1.7; color:var(--text);}
+
+.stamp{width:78px; height:78px; min-width:78px; border-radius:50%; border:3px double var(--seal); display:flex; align-items:center; justify-content:center; transform:rotate(-9deg); font-family:var(--serif); font-weight:700; color:var(--seal); font-size:14px; text-align:center; line-height:1.25; white-space:pre-line; flex-shrink:0;}
+.stamp.medium{border-color:var(--brass); color:var(--brass);}
+.stamp.low{border-color:var(--jade); color:var(--jade);}
+.stamp.small{width:46px; height:46px; min-width:46px; font-size:10px; border-width:2px;}
+
+.checklist{display:flex; flex-direction:column; gap:8px;}
+.check-item{display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border:1px solid var(--line); border-radius:4px; background:#fff;}
+.check-item input{margin-top:4px; flex-shrink:0;}
+.risk-tag{font-family:var(--mono); font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:3px; text-transform:uppercase; margin-right:8px; display:inline-block;}
+.risk-tag.high{background:var(--seal-bg); color:var(--seal);}
+.risk-tag.medium{background:var(--brass-bg); color:var(--brass);}
+.risk-tag.low{background:var(--jade-bg); color:var(--jade);}
+.ct-title{font-weight:600; font-size:13.5px;}
+.ct-num{font-family:var(--mono); font-size:11.5px; color:var(--muted); margin-right:8px;}
+
+.clause-card{position:relative; border:1px solid var(--line); border-left:5px solid var(--ink); border-radius:4px; padding:20px 22px; margin-bottom:18px; background:#fff;}
+.clause-card.high{border-left-color:var(--seal);}
+.clause-card.medium{border-left-color:var(--brass);}
+.clause-card.low{border-left-color:var(--jade);}
+.clause-head{display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:6px;}
+.clause-id{font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.04em;}
+.clause-title{font-family:var(--serif); font-size:17px; font-weight:600; color:var(--ink); margin:2px 0 0;}
+.redline-flag{display:inline-block; margin-top:8px; font-family:var(--mono); font-size:11px; font-weight:700; color:#fff; background:var(--seal); padding:3px 8px; border-radius:3px; letter-spacing:.04em;}
+
+.block-label{font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--muted); text-transform:uppercase; margin:16px 0 6px;}
+.quote-block{border-left:3px solid var(--seal); background:var(--seal-bg); padding:12px 16px; font-family:var(--serif); font-size:14px; line-height:1.8; color:#3a2620;}
+.suggest-block{border-left:3px solid var(--jade); background:var(--jade-bg); padding:12px 16px; font-family:var(--serif); font-size:14px; line-height:1.8; color:#1f3a2c;}
+ul.bullet-list{margin:0; padding-left:20px; font-size:13.5px; line-height:1.75;}
+ul.bullet-list li{margin-bottom:5px;}
+
+.tax-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px;}
+@media (max-width:680px){.tax-grid{grid-template-columns:1fr;}}
+.tax-box{border:1px solid var(--line); border-radius:4px; padding:12px 14px; background:#f7f7f4;}
+.tax-box .tax-label{font-family:var(--mono); font-size:10px; color:var(--ink-2); font-weight:700; letter-spacing:.04em; margin-bottom:6px; display:block;}
+.tax-box.concern{border-top:3px solid var(--seal);}
+.tax-box.evidence{border-top:3px solid var(--brass);}
+.tax-box.exposure{border-top:3px solid var(--ink);}
+.tax-box p{margin:0; font-size:13px; line-height:1.65;}
+
+.clause-loading{display:flex; align-items:center; gap:10px; color:var(--muted); font-size:13px; padding:10px 0 2px;}
+.spin{width:14px; height:14px; border:2px solid var(--line); border-top-color:var(--ink); border-radius:50%; animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.clause-error{color:var(--seal); font-size:13px;}
+.retry-btn{font-family:var(--mono); font-size:11.5px; border:1px solid var(--seal); color:var(--seal); background:transparent; padding:4px 10px; border-radius:3px; cursor:pointer; margin-left:8px;}
+
+table.summary-table{width:100%; border-collapse:collapse; font-size:13px;}
+table.summary-table th{text-align:left; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--line); padding:8px 10px;}
+table.summary-table td{padding:10px 10px; border-bottom:1px solid #eceee9; vertical-align:top;}
+table.summary-table tr.risk-row-high{border-left:3px solid var(--seal);}
+table.summary-table tr.risk-row-medium{border-left:3px solid var(--brass);}
+table.summary-table tr.risk-row-low{border-left:3px solid var(--jade);}
+
+.negotiation-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+@media (max-width:780px){.negotiation-grid{grid-template-columns:1fr;}}
+.neg-col{border-radius:4px; padding:16px 16px 14px;}
+.neg-col h3{font-family:var(--mono); font-size:11.5px; letter-spacing:.03em; margin:0 0 10px; text-transform:uppercase;}
+.neg-col.redlines{background:var(--seal-bg);}
+.neg-col.redlines h3{color:var(--seal);}
+.neg-col.important{background:var(--brass-bg);}
+.neg-col.important h3{color:var(--brass);}
+.neg-col.optimize{background:var(--jade-bg);}
+.neg-col.optimize h3{color:var(--jade);}
+.neg-col ul{margin:0; padding-left:18px; font-size:13px; line-height:1.7;}
+
+.docs-list{margin:0; padding-left:20px; font-size:13.5px; line-height:1.8;}
+
+.export-row{display:flex; gap:12px; margin:6px 0 18px; flex-wrap:wrap;}
+.disclaimer{font-size:11.5px; color:var(--muted); line-height:1.6; padding:6px 4px 0;}
+
+.error-card{border-color:var(--seal); background:var(--seal-bg); color:#5c241c; font-size:13.5px;}
+
+/* API key banner */
+.apikey-bar{background:#1e2e44; border-bottom:1px solid #2e4060; padding:10px 22px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+.apikey-bar label{font-family:var(--mono); font-size:11.5px; color:#8fb3d4; white-space:nowrap; flex-shrink:0;}
+.apikey-wrap{display:flex; align-items:center; gap:8px; flex:1; min-width:220px; max-width:540px;}
+.apikey-input{flex:1; font-family:var(--mono); font-size:13px; background:#0f1c2d; color:#c9dff2; border:1px solid #2e4060; border-radius:4px; padding:7px 11px; letter-spacing:.03em;}
+.apikey-input:focus{outline:2px solid var(--brass); outline-offset:1px; border-color:var(--brass);}
+.apikey-toggle{background:transparent; border:1px solid #2e4060; color:#7a99b8; font-size:12px; padding:7px 10px; border-radius:4px; cursor:pointer; white-space:nowrap; flex-shrink:0;}
+.apikey-toggle:hover{border-color:#8fb3d4; color:#c9dff2;}
+.apikey-status{font-family:var(--mono); font-size:11px; white-space:nowrap;}
+.apikey-status.ok{color:#5cb88a;}
+.apikey-status.empty{color:#b08040;}
+.apikey-hint{font-size:11.5px; color:#536a84; flex-basis:100%; line-height:1.5;}
+.apikey-hint a{color:#7aadcc; text-decoration:underline;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+<div class="page">
+
+<div class="apikey-bar" id="apikeyBar">
+    <label for="apikeyInput">🔑 Anthropic API Key</label>
+    <div class="apikey-wrap">
+      <input type="password" id="apikeyInput" class="apikey-input" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false">
+      <button type="button" class="apikey-toggle" id="apikeyToggle">顯示</button>
+    </div>
+    <span class="apikey-status empty" id="apikeyStatus">尚未輸入</span>
+    <span class="apikey-hint">
+      API Key 僅暫存於此分頁記憶體，不會寫入磁碟或上傳至任何伺服器。
+      取得 Key：<a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com → API Keys</a>
+    </span>
+  </div>
+
+  <header class="letterhead">
+    <div class="letterhead-inner">
+      <div class="brand">
+        <div class="brand-mark">怡</div>
+        <div>
+          <div class="brand-zh">怡業集團 · PeriPower / COMART Group</div>
+          <div class="brand-en">Cross-Border Contract Risk Review Desk</div>
+        </div>
+      </div>
+      <div class="case-meta">
+        <div>案號 Case No. <span id="caseNo">—</span></div>
+        <div id="caseDate"></div>
+      </div>
+    </div>
+    <div class="letterhead-sub">跨境合約風險審閱工作台 — 稅局查核角度 · CFO風險管理角度 · 經營管理角度（台灣 / 中國 / 越南）</div>
+  </header>
+
+  <main>
+    <section class="card" id="inputCard">
+      <h2 class="section-title">01 — 合約輸入與審閱設定</h2>
+
+      <div class="field">
+        <label>合約輸入 <span class="req">*</span></label>
+
+        <div class="dropzone" id="dropzone" tabindex="0">
+          <input type="file" id="fileInput" accept=".docx,.doc,.xlsx,.xls,.pdf,.txt" hidden>
+          <div class="dropzone-icon">📁</div>
+          <div class="dropzone-text">拖曳檔案到此處，或<span class="dropzone-link">點擊選擇檔案</span></div>
+          <div class="dropzone-sub">
+            <span class="fmt-badge">DOCX</span><span class="fmt-badge">XLSX / XLS</span><span class="fmt-badge">PDF</span><span class="fmt-badge">TXT</span>
+            ・單檔上限 20MB・檔案僅在瀏覽器本機端解析
+          </div>
+        </div>
+
+        <div class="file-chip" id="fileChip" hidden>
+          <div class="file-icon" id="fileChipIcon">📄</div>
+          <div class="file-meta">
+            <div class="file-name" id="fileChipName">—</div>
+            <div class="file-sub" id="fileChipSub">—</div>
+          </div>
+          <button type="button" class="file-remove-btn" id="fileRemoveBtn">移除檔案</button>
+        </div>
+
+        <div class="divider-or"><span>或直接貼上／編輯合約文字</span></div>
+
+        <textarea id="contractText" rows="12" placeholder="請貼上合約全文（可為繁體中文、簡體中文或英文），或使用上方上傳檔案功能自動擷取文字..."></textarea>
+        <div class="field-actions">
+          <button type="button" class="ghost-btn" id="loadSampleBtn">載入範例合約</button>
+          <span class="char-count" id="charCount">0 字</span>
+        </div>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label for="entitySelect">怡業集團簽約主體</label>
+          <select id="entitySelect">
+            <option>怡業國際股份有限公司（台灣母公司）</option>
+            <option>東莞恒群塑膠有限公司（中國）</option>
+            <option>越南 COMART</option>
+            <option>越南 PERIPOWER</option>
+            <option>其他／未指定</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="roleSelect">怡業方在本合約之身分</label>
+          <select id="roleSelect">
+            <option>供應商／賣方</option>
+            <option>買方／採購方</option>
+            <option>委託服務方</option>
+            <option>受託服務方</option>
+            <option>授權方</option>
+            <option>被授權方</option>
+            <option>其他</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="typeSelect">合約類型</label>
+          <select id="typeSelect">
+            <option>自動判斷</option>
+            <option>採購合約</option>
+            <option>銷售合約</option>
+            <option>OEM/ODM 製造合約</option>
+            <option>保密協議（NDA）</option>
+            <option>服務合約</option>
+            <option>授權合約</option>
+            <option>模具／治具相關合約</option>
+            <option>倉儲／租賃合約</option>
+            <option>勞動合約</option>
+            <option>其他</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="focusInput">特別關注事項（選填）</label>
+        <input type="text" id="focusInput" placeholder="例如：模具所有權、付款條件、移轉訂價合理性、PE風險...">
+      </div>
+
+      <div class="submit-row">
+        <button type="button" class="primary-btn" id="submitBtn"><span class="stamp-icon">印</span> 開始審閱</button>
+        <span class="status-line" id="statusLine"></span>
+      </div>
+    </section>
+
+    <section class="card error-card" id="errorCard" hidden></section>
+
+    <section id="resultsSection" hidden>
+
+      <section class="card" id="basicInfoCard" hidden>
+        <h2 class="section-title">02 — 合約基本資訊與整體風險評估</h2>
+        <div id="basicInfoContent"></div>
+      </section>
+
+      <section class="card" id="checklistCard" hidden>
+        <h2 class="section-title">03 — 條款風險清單（請勾選需要逐條詳細審閱的條款）</h2>
+        <div class="checklist" id="checklistContent"></div>
+        <div class="submit-row" style="margin-top:16px;">
+          <button type="button" class="primary-btn" id="generateDetailBtn"><span class="stamp-icon">審</span> 產生逐條詳細審閱</button>
+          <span class="status-line" id="detailStatusLine"></span>
+        </div>
+      </section>
+
+      <section class="card" id="clausesCard" hidden>
+        <h2 class="section-title">04 — 逐條風險審閱</h2>
+        <div id="clausesList"></div>
+      </section>
+
+      <section class="card" id="summaryCard" hidden>
+        <h2 class="section-title">05 — 整體風險摘要表</h2>
+        <div id="summaryContent"></div>
+      </section>
+
+      <section class="card" id="negotiationCard" hidden>
+        <h2 class="section-title">06 — 談判建議與策略</h2>
+        <div id="negotiationContent"></div>
+      </section>
+
+      <section class="card" id="docsCard" hidden>
+        <h2 class="section-title">07 — 可補強資料建議（強化稅局查核佐證力）</h2>
+        <div id="docsContent"></div>
+      </section>
+
+      <div class="export-row" id="exportRow" hidden>
+        <button class="ghost-btn" id="copyMarkdownBtn">複製審閱摘要（文字版）</button>
+        <button class="ghost-btn" id="resetBtn">清除並重新開始</button>
+      </div>
+    </section>
+
+    <p class="disclaimer">本工具為 AI 輔助初步審閱，僅供內部風險評估參考，正式合約決策仍應由法務／外部律師／稅務顧問覆核全文後定案。上傳之檔案僅於您的瀏覽器本機端解析、不會上傳至任何伺服器；擷取出的文字僅於您按下「開始審閱」後，作為本次 AI 分析請求之內容傳送，本頁不會將資料儲存於伺服器。</p>
+  </main>
+</div>
+
+<script>
+/* ---------------- state ---------------- */
+const state = { basicInfo:null, clauses:[], summaryTable:[], negotiation:null, recommendedDocuments:[], details:{} };
+
+/* ---------------- utils ---------------- */
+function escapeHtml(s){
+  if(s===undefined || s===null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function riskClass(level){ return (level==='high'||level==='medium'||level==='low') ? level : 'medium'; }
+function riskLabel(level){ const l=riskClass(level); return l==='high'?'高風險':l==='medium'?'中風險':'低風險'; }
+function riskWord(level){ const l=riskClass(level); return l==='high'?'高\n風險':l==='medium'?'中\n風險':'低\n風險'; }
+function riskEmoji(level){ const l=riskClass(level); return l==='high'?'🔴':l==='medium'?'🟡':'🟢'; }
+function priorityLabel(p){ return p==='must'?'✅ 必須修改': p==='should'?'⚠️ 建議修改':'📝 可優化'; }
+function genCaseNo(){
+  const d = new Date();
+  const ymd = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  const rand = Math.floor(1000+Math.random()*9000);
+  return 'CR-'+ymd+'-'+rand;
+}
+function showStatus(text){ document.getElementById('statusLine').textContent = text || ''; }
+function showDetailStatus(text){ document.getElementById('detailStatusLine').textContent = text || ''; }
+function showError(msg){
+  const c = document.getElementById('errorCard');
+  c.hidden = false;
+  c.innerHTML = '<strong>發生錯誤：</strong> ' + escapeHtml(msg);
+}
+
+/* ---------------- file upload & parsing ---------------- */
+const MAX_FILE_MB = 20;
+
+function formatBytes(bytes){
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/1024/1024).toFixed(2) + ' MB';
+}
+function extIcon(ext){
+  if(ext==='docx'||ext==='doc') return '📝';
+  if(ext==='xlsx'||ext==='xls') return '📊';
+  if(ext==='pdf') return '📕';
+  return '📄';
+}
+function setFileChip(state, name, sub, icon){
+  const chip = document.getElementById('fileChip');
+  chip.hidden = false;
+  chip.className = 'file-chip' + (state ? ' '+state : '');
+  document.getElementById('fileChipIcon').textContent = icon || '📄';
+  document.getElementById('fileChipName').textContent = name;
+  const subEl = document.getElementById('fileChipSub');
+  subEl.textContent = sub;
+  subEl.className = 'file-sub' + (state ? ' '+state : '');
+}
+function clearFileChip(){
+  document.getElementById('fileChip').hidden = true;
+  document.getElementById('fileInput').value = '';
+}
+
+async function extractDocx(file){
+  if(typeof mammoth === 'undefined'){ throw new Error('文件解析元件載入失敗，請改用直接貼上文字，或重新整理頁面後再試'); }
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  const text = (result.value || '').trim();
+  if(!text){ throw new Error('未能從此 Word 檔案擷取到文字內容'); }
+  return text;
+}
+async function extractXlsx(file){
+  if(typeof XLSX === 'undefined'){ throw new Error('試算表解析元件載入失敗，請改用直接貼上文字，或重新整理頁面後再試'); }
+  const arrayBuffer = await file.arrayBuffer();
+  const wb = XLSX.read(arrayBuffer, { type:'array' });
+  const parts = [];
+  wb.SheetNames.forEach(name => {
+    const sheet = wb.Sheets[name];
+    const csv = XLSX.utils.sheet_to_csv(sheet, { blankrows:false }).trim();
+    if(csv){ parts.push('=== 工作表：'+name+' ===\n'+csv); }
+  });
+  const text = parts.join('\n\n').trim();
+  if(!text){ throw new Error('未能從此試算表擷取到內容'); }
+  return text;
+}
+async function extractPdf(file, onProgress){
+  if(typeof pdfjsLib === 'undefined'){ throw new Error('PDF 解析元件載入失敗，請改用直接貼上文字，或重新整理頁面後再試'); }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pages = [];
+  for(let i=1; i<=pdf.numPages; i++){
+    if(onProgress) onProgress(i, pdf.numPages);
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map(it => it.str).join(' ').replace(/\s+/g,' ').trim();
+    pages.push(pageText);
+  }
+  const text = pages.join('\n\n').trim();
+  if(text.length < 30){
+    throw new Error('擷取到的文字過少，此 PDF 可能為掃描影像檔（無文字層），建議改用 OCR 後的版本，或直接貼上文字');
+  }
+  return text;
+}
+async function extractTxt(file){
+  const text = await file.text();
+  if(!text.trim()){ throw new Error('此文字檔案內容為空'); }
+  return text;
+}
+
+async function handleFile(file){
+  const name = file.name;
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  const icon = extIcon(ext);
+
+  if(file.size > MAX_FILE_MB*1024*1024){
+    setFileChip('error', name, '檔案超過 '+MAX_FILE_MB+'MB 上限，請改用較小的檔案或直接貼上文字', icon);
+    return;
+  }
+  if(!['docx','doc','xlsx','xls','pdf','txt'].includes(ext)){
+    setFileChip('error', name, '不支援的檔案格式，請上傳 DOCX／XLSX／XLS／PDF／TXT', icon);
+    return;
+  }
+  if(ext === 'doc'){
+    setFileChip('error', name, '不支援舊版 .doc 格式，請於 Word 開啟後另存為 .docx 再上傳', icon);
+    return;
+  }
+
+  setFileChip('parsing', name, '正在解析檔案內容（'+formatBytes(file.size)+'）...', icon);
+
+  try{
+    let text = '';
+    if(ext === 'docx'){
+      text = await extractDocx(file);
+    }else if(ext === 'xlsx' || ext === 'xls'){
+      text = await extractXlsx(file);
+    }else if(ext === 'pdf'){
+      text = await extractPdf(file, (cur, total) => {
+        setFileChip('parsing', name, '正在解析第 '+cur+' / '+total+' 頁...', icon);
+      });
+    }else if(ext === 'txt'){
+      text = await extractTxt(file);
+    }
+
+    const ta = document.getElementById('contractText');
+    ta.value = text;
+    document.getElementById('charCount').textContent = text.length + ' 字';
+    setFileChip('success', name, '已擷取 '+text.length+' 字，內容已自動填入下方欄位（可再手動編輯後送出）', icon);
+    showStatus('');
+  }catch(err){
+    setFileChip('error', name, err.message || '檔案解析失敗，請改用直接貼上文字', icon);
+  }
+}
+
+function setupDropzone(){
+  const dz = document.getElementById('dropzone');
+  const input = document.getElementById('fileInput');
+
+  dz.addEventListener('click', () => input.click());
+  dz.addEventListener('keydown', e => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); input.click(); } });
+
+  ['dragenter','dragover'].forEach(evt => {
+    dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); });
+  });
+  ['dragleave','drop'].forEach(evt => {
+    dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.remove('dragover'); });
+  });
+  dz.addEventListener('drop', e => {
+    const files = e.dataTransfer.files;
+    if(files && files.length){ handleFile(files[0]); }
+  });
+
+  input.addEventListener('change', e => {
+    if(e.target.files && e.target.files.length){ handleFile(e.target.files[0]); }
+  });
+
+  document.getElementById('fileRemoveBtn').addEventListener('click', () => {
+    clearFileChip();
+    document.getElementById('contractText').value = '';
+    document.getElementById('charCount').textContent = '0 字';
+  });
+}
+
+/* ---------------- persona / prompts ---------------- */
+const PERSONA = `你是怡業集團（PeriPower / COMART Group）內部的資深法務與跨境稅務顧問。
+
+集團背景：台灣怡業國際為控股與業務母公司，東莞恒群塑膠有限公司為中國研發與製造中心，越南COMART與越南PERIPOWER為主要製造基地，產業為塑膠射出成型與車用配件OEM/ODM，美國市場約占集團營收90%以上。
+
+審閱合約時，你必須同時以下列三個角度進行分析，缺一不可：
+1. 稅局查核角度：站在台灣國稅局、中國稽徵機關、越南稅務總局的立場，找出本條款可能被質疑、要求補稅、或要求提出佐證文件的安排，特別留意移轉訂價（Transfer Pricing）、常設機構（PE）風險、增值稅（VAT）、境外所得認定、異常交易定價等議題。
+2. CFO風險管理角度：財務曝險、法律責任、現金流影響、匯率風險、合規風險。
+3. 經營管理角度：商業合理性、對集團長期經營與客戶關係的影響。
+
+針對每一個有風險的條款，你必須具體指出：稅局可能質疑點、證據不足處（若被查核，目前合約與附件是否足以佐證商業實質）、潛在補稅風險（盡量具體說明可能適用的法規與風險量級）、可補強資料（建議補充哪些文件以降低查核風險），以及建議修正方向。
+
+語言規則：輸出一律使用繁體中文撰寫分析文字；若原合約條文為英文，建議修正條文需同時提供英文版本（中文在前、英文在後，以換行分隔）；若原合約為簡體中文，建議修正條文輸出繁體中文版本。
+
+極重要：你必須只輸出合法的 JSON 物件，不要包含任何 Markdown 標記（例如三個反引號）、不要有任何前言、說明文字或結尾語，只輸出 JSON 本身。`;
+
+const TRIAGE_INSTRUCTIONS = `請完整閱讀上述合約全文，找出所有具有風險的條款（包含可優化的低風險條款），並輸出符合下列結構的 JSON（欄位名稱與型別必須完全一致，不要新增其他欄位，不要省略必填欄位）：
+
+{
+  "basicInfo": {
+    "contractName": "string",
+    "contractType": "string",
+    "parties": "string，需註明怡業方為甲方或乙方",
+    "governingLaw": "string",
+    "disputeResolution": "string",
+    "term": "string",
+    "currencyAmount": "string",
+    "overallRisk": "high 或 medium 或 low",
+    "overallRiskNote": "string，一到兩句話總評"
+  },
+  "clauses": [ { "id": "c1、c2...依序編號", "clauseNumber": "string", "clauseTitle": "string", "riskLevel": "high 或 medium 或 low" } ],
+  "summaryTable": [ { "clauseNumber": "string", "topic": "string", "riskLevel": "high 或 medium 或 low", "coreRisk": "string，20字以內", "priority": "must 或 should 或 optional" } ],
+  "negotiationStrategy": {
+    "redLines": ["string，格式：條款編號 主題：簡述"],
+    "important": ["string"],
+    "optimization": ["string"]
+  },
+  "recommendedDocuments": ["string，建議補強的證明文件或資料"]
+}
+
+規則：
+1. clauses 陣列必須涵蓋 summaryTable 中所有條款，兩者透過 clauseNumber 對應。
+2. 若風險條款數量超過15條，僅列出最重要的15條（依風險等級與重要性排序），其餘可於 recommendedDocuments 註明其餘條款風險較低。
+3. 所有文字務必精簡扼要，避免冗長描述，以確保輸出可被完整解析。
+4. 只輸出 JSON，不要有任何其他文字。`;
+
+const DETAIL_INSTRUCTIONS = `請針對指定的單一條款進行逐條風險審閱，輸出符合下列結構的 JSON（僅此一個條款，欄位名稱與型別必須完全一致）：
+
+{
+  "originalText": "string，完整引用原文，不得改動文字；若條款內容極長（超過約200字），可保留開頭與結尾並以...省略中間次要文字，但須保留風險核心語句",
+  "riskLevel": "high 或 medium 或 low",
+  "riskAnalysis": ["string，對怡業之潛在不利影響、語意模糊處、與台灣/中國/越南法規衝突點，列出3至5點"],
+  "taxAuthorityConcerns": "string，具體說明稅局可能質疑的角度與依據",
+  "evidenceGaps": "string，說明目前合約或附件證據不足之處",
+  "taxExposure": "string，說明潛在補稅風險，盡量具體說明可能適用的法規與風險量級",
+  "suggestedText": "string，完整替換條文建議，語氣與原文格式一致；若原文為英文，請以「中文版本」開頭中文建議條文，換行後以「English version:」開頭提供英文建議條文",
+  "revisionReasons": ["string，說明每處修改目的與如何降低風險，列出2至4點"],
+  "isRedLine": true 或 false
+}
+
+只輸出 JSON，不要有任何其他文字、不要使用 Markdown 標記。`;
+
+function buildContextBlock(){
+  const entity = document.getElementById('entitySelect').value;
+  const role = document.getElementById('roleSelect').value;
+  const type = document.getElementById('typeSelect').value;
+  const focus = document.getElementById('focusInput').value.trim();
+  return `怡業集團簽約主體：${entity}\n怡業方在本合約之身分：${role}\n合約類型（使用者提示，若為「自動判斷」請自行判斷實際類型）：${type}\n使用者特別關注事項：${focus || '無特別指定'}`;
+}
+
+/* ---------------- API ---------------- */
+function getApiKey(){
+  return (document.getElementById('apikeyInput').value || '').trim();
+}
+
+async function callClaude(system, user){
+  const apiKey = getApiKey();
+  if(!apiKey){ throw new Error('請先在頂端輸入您的 Anthropic API Key（格式：sk-ant-api03-…）'); }
+  if(!apiKey.startsWith('sk-ant-')){ throw new Error('API Key 格式不正確，應以 sk-ant- 開頭，請確認是否完整貼上'); }
+
+  let resp;
+  try{
+    resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 4000,
+        system: system,
+        messages: [{ role: "user", content: user }]
+      })
+    });
+  }catch(netErr){
+    throw new Error('網路連線失敗（'+netErr.message+'）。請確認網路狀態，並確認瀏覽器未封鎖對 api.anthropic.com 的請求');
+  }
+
+  if(!resp.ok){
+    let errBody = '';
+    try{ const j = await resp.json(); errBody = j?.error?.message || JSON.stringify(j); }catch(_){}
+    if(resp.status === 401){ throw new Error('API Key 驗證失敗（401）：請確認 Key 是否正確且有效'); }
+    if(resp.status === 403){ throw new Error('存取被拒（403）：此 Key 可能無法從瀏覽器直接呼叫，請確認 Key 權限'); }
+    if(resp.status === 429){ throw new Error('請求頻率超過限制（429）：請稍候幾秒後再試'); }
+    if(resp.status === 529){ throw new Error('Anthropic 服務暫時過載（529）：請稍後重試'); }
+    throw new Error('API 請求失敗（'+resp.status+'）' + (errBody ? '：'+errBody : ''));
+  }
+
+  const data = await resp.json();
+  const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+  let cleaned = text.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if(start >= 0 && end > start){ cleaned = cleaned.slice(start, end+1); }
+  try{
+    return JSON.parse(cleaned);
+  }catch(e){
+    console.error('JSON parse failed. Raw response:', text);
+    throw new Error('AI 回覆格式無法解析，可能是輸出被截斷，請重試一次');
+  }
+}
+
+async function runTriage(contractText){
+  const user = `【合約全文】\n${contractText}\n\n【背景資訊】\n${buildContextBlock()}\n\n${TRIAGE_INSTRUCTIONS}`;
+  return await callClaude(PERSONA, user);
+}
+
+async function runClauseDetail(contractText, clause){
+  const user = `【合約全文】\n${contractText}\n\n【背景資訊】\n${buildContextBlock()}\n\n請針對以下條款進行逐條風險審閱，僅輸出此一條款的 JSON，不要包含其他條款：\n條款編號：${clause.clauseNumber}\n條款標題：${clause.clauseTitle}\n\n${DETAIL_INSTRUCTIONS}`;
+  return await callClaude(PERSONA, user);
+}
+
+/* ---------------- render ---------------- */
+function renderBasicInfo(){
+  const b = state.basicInfo || {};
+  const overall = b.overallRisk;
+  document.getElementById('basicInfoCard').hidden = false;
+  document.getElementById('basicInfoContent').innerHTML = `
+    <div class="info-grid">
+      <div class="info-row"><span class="info-label">合約名稱</span><span class="info-value">${escapeHtml(b.contractName||'—')}</span></div>
+      <div class="info-row"><span class="info-label">合約類型</span><span class="info-value">${escapeHtml(b.contractType||'—')}</span></div>
+      <div class="info-row"><span class="info-label">當事方</span><span class="info-value">${escapeHtml(b.parties||'—')}</span></div>
+      <div class="info-row"><span class="info-label">適用法律</span><span class="info-value">${escapeHtml(b.governingLaw||'—')}</span></div>
+      <div class="info-row"><span class="info-label">爭議解決</span><span class="info-value">${escapeHtml(b.disputeResolution||'—')}</span></div>
+      <div class="info-row"><span class="info-label">合約期限</span><span class="info-value">${escapeHtml(b.term||'—')}</span></div>
+      <div class="info-row"><span class="info-label">幣別與金額</span><span class="info-value">${escapeHtml(b.currencyAmount||'—')}</span></div>
+    </div>
+    <div class="risk-banner">
+      <div class="stamp ${riskClass(overall)}">${riskWord(overall)}</div>
+      <div class="risk-note">${escapeHtml(b.overallRiskNote||'')}</div>
+    </div>
+  `;
+}
+
+function renderChecklist(){
+  document.getElementById('checklistCard').hidden = false;
+  const items = (state.clauses||[]).map(c => {
+    const checked = (c.riskLevel==='high' || c.riskLevel==='medium') ? 'checked' : '';
+    return `<label class="check-item">
+      <input type="checkbox" value="${escapeHtml(c.id)}" ${checked}>
+      <div>
+        <span class="risk-tag ${riskClass(c.riskLevel)}">${riskLabel(c.riskLevel)}</span>
+        <span class="ct-num">${escapeHtml(c.clauseNumber)}</span>
+        <span class="ct-title">${escapeHtml(c.clauseTitle)}</span>
+      </div>
+    </label>`;
+  }).join('');
+  document.getElementById('checklistContent').innerHTML = items || '<p style="font-size:13.5px;color:var(--muted);">未偵測到具風險條款。</p>';
+}
+
+function renderSummaryTable(){
+  document.getElementById('summaryCard').hidden = false;
+  const rows = (state.summaryTable||[]).map(r => `
+    <tr class="risk-row-${riskClass(r.riskLevel)}">
+      <td>${escapeHtml(r.clauseNumber)}</td>
+      <td>${escapeHtml(r.topic)}</td>
+      <td><span class="risk-tag ${riskClass(r.riskLevel)}">${riskLabel(r.riskLevel)}</span></td>
+      <td>${escapeHtml(r.coreRisk)}</td>
+      <td>${priorityLabel(r.priority)}</td>
+    </tr>`).join('');
+  document.getElementById('summaryContent').innerHTML = `
+    <table class="summary-table">
+      <thead><tr><th>條款</th><th>主題</th><th>風險等級</th><th>核心風險</th><th>建議優先處理</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5">無資料</td></tr>'}</tbody>
+    </table>
+  `;
+}
+
+function renderNegotiation(){
+  document.getElementById('negotiationCard').hidden = false;
+  const n = state.negotiation || {};
+  const list = arr => (arr && arr.length) ? arr.map(x => '<li>'+escapeHtml(x)+'</li>').join('') : '<li>（無）</li>';
+  document.getElementById('negotiationContent').innerHTML = `
+    <div class="negotiation-grid">
+      <div class="neg-col redlines"><h3>🚩 Red Lines 不得讓步</h3><ul>${list(n.redLines)}</ul></div>
+      <div class="neg-col important"><h3>⚠️ 重要議題 盡力爭取</h3><ul>${list(n.important)}</ul></div>
+      <div class="neg-col optimize"><h3>📝 優化建議 視談判空間調整</h3><ul>${list(n.optimization)}</ul></div>
+    </div>
+  `;
+}
+
+function renderRecommendedDocs(){
+  document.getElementById('docsCard').hidden = false;
+  const items = (state.recommendedDocuments||[]).map(d => '<li>'+escapeHtml(d)+'</li>').join('');
+  document.getElementById('docsContent').innerHTML = `<ul class="docs-list">${items || '<li>（無特別建議）</li>'}</ul>`;
+}
+
+function clauseCardSkeleton(c){
+  return `<div class="clause-card ${riskClass(c.riskLevel)}" id="clause-${escapeHtml(c.id)}">
+      <div class="clause-head">
+        <div>
+          <div class="clause-id">${escapeHtml(c.clauseNumber)}</div>
+          <div class="clause-title">${escapeHtml(c.clauseTitle)}</div>
+        </div>
+        <div class="stamp small ${riskClass(c.riskLevel)}">${riskWord(c.riskLevel)}</div>
+      </div>
+      <div class="clause-loading"><div class="spin"></div> 審閱中...</div>
+    </div>`;
+}
+
+function renderClauseSkeletons(selected){
+  document.getElementById('clausesList').innerHTML = selected.map(clauseCardSkeleton).join('');
+}
+
+function renderClauseDetail(clause, detail){
+  const el = document.getElementById('clause-'+clause.id);
+  if(!el) return;
+  const level = detail.riskLevel || clause.riskLevel;
+  el.className = 'clause-card ' + riskClass(level);
+  el.innerHTML = `
+    <div class="clause-head">
+      <div>
+        <div class="clause-id">${escapeHtml(clause.clauseNumber)}</div>
+        <div class="clause-title">${escapeHtml(clause.clauseTitle)}</div>
+        ${detail.isRedLine ? '<span class="redline-flag">🚩 RED LINE 必爭條款</span>' : ''}
+      </div>
+      <div class="stamp small ${riskClass(level)}">${riskWord(level)}</div>
+    </div>
+    <div class="block-label">原始條文</div>
+    <div class="quote-block">${escapeHtml(detail.originalText)}</div>
+    <div class="block-label">風險說明</div>
+    <ul class="bullet-list">${(detail.riskAnalysis||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join('')}</ul>
+    <div class="tax-grid">
+      <div class="tax-box concern"><span class="tax-label">稅局可能質疑點</span><p>${escapeHtml(detail.taxAuthorityConcerns||'—')}</p></div>
+      <div class="tax-box evidence"><span class="tax-label">證據不足處</span><p>${escapeHtml(detail.evidenceGaps||'—')}</p></div>
+      <div class="tax-box exposure"><span class="tax-label">潛在補稅風險</span><p>${escapeHtml(detail.taxExposure||'—')}</p></div>
+    </div>
+    <div class="block-label">建議修正條文</div>
+    <div class="suggest-block">${escapeHtml(detail.suggestedText)}</div>
+    <div class="block-label">修正理由</div>
+    <ul class="bullet-list">${(detail.revisionReasons||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join('')}</ul>
+  `;
+}
+
+function renderClauseError(clause, message){
+  const el = document.getElementById('clause-'+clause.id);
+  if(!el) return;
+  el.innerHTML = `
+    <div class="clause-head">
+      <div><div class="clause-id">${escapeHtml(clause.clauseNumber)}</div><div class="clause-title">${escapeHtml(clause.clauseTitle)}</div></div>
+    </div>
+    <p class="clause-error">審閱失敗：${escapeHtml(message)} <button class="retry-btn" data-id="${escapeHtml(clause.id)}">重試</button></p>
+  `;
+}
+
+/* white-space:pre-line in quote/suggest blocks needs literal newlines preserved */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.quote-block, .suggest-block').forEach(()=>{});
+});
+
+/* ---------------- pool ---------------- */
+async function runPool(items, worker, concurrency){
+  let idx = 0;
+  async function next(){
+    while(idx < items.length){
+      const i = idx++;
+      await worker(items[i]);
+    }
+  }
+  const runners = Array.from({length: Math.min(concurrency, items.length)}, next);
+  await Promise.all(runners);
+}
+
+/* ---------------- flow control ---------------- */
+function resetResults(){
+  state.basicInfo=null; state.clauses=[]; state.summaryTable=[]; state.negotiation=null; state.recommendedDocuments=[]; state.details={};
+  ['basicInfoCard','checklistCard','clausesCard','summaryCard','negotiationCard','docsCard'].forEach(id => { document.getElementById(id).hidden = true; });
+  document.getElementById('basicInfoContent').innerHTML = '';
+  document.getElementById('checklistContent').innerHTML = '';
+  document.getElementById('clausesList').innerHTML = '';
+  document.getElementById('summaryContent').innerHTML = '';
+  document.getElementById('negotiationContent').innerHTML = '';
+  document.getElementById('docsContent').innerHTML = '';
+  document.getElementById('exportRow').hidden = true;
+  document.getElementById('errorCard').hidden = true;
+  document.getElementById('resultsSection').hidden = true;
+  showDetailStatus('');
+}
+
+async function startReview(){
+  const contractText = document.getElementById('contractText').value.trim();
+  if(!contractText){ showStatus('請先貼上合約文字'); return; }
+  resetResults();
+  document.getElementById('submitBtn').disabled = true;
+  showStatus('正在進行整體風險掃描...');
+  try{
+    const triage = await runTriage(contractText);
+    state.basicInfo = triage.basicInfo || {};
+    state.clauses = triage.clauses || [];
+    state.summaryTable = triage.summaryTable || [];
+    state.negotiation = triage.negotiationStrategy || {redLines:[],important:[],optimization:[]};
+    state.recommendedDocuments = triage.recommendedDocuments || [];
+
+    document.getElementById('resultsSection').hidden = false;
+    renderBasicInfo();
+    renderChecklist();
+    renderSummaryTable();
+    renderNegotiation();
+    renderRecommendedDocs();
+    document.getElementById('exportRow').hidden = false;
+    showStatus('整體掃描完成，請於下方勾選需逐條詳細審閱的條款。');
+  }catch(err){
+    showError(err.message);
+    showStatus('');
+  }finally{
+    document.getElementById('submitBtn').disabled = false;
+  }
+}
+
+async function generateDetails(){
+  const checked = Array.from(document.querySelectorAll('#checklistContent input[type=checkbox]:checked'));
+  const selected = checked.map(cb => state.clauses.find(c => c.id === cb.value)).filter(Boolean);
+  if(selected.length === 0){ showDetailStatus('請至少選擇一個條款'); return; }
+
+  document.getElementById('clausesCard').hidden = false;
+  renderClauseSkeletons(selected);
+  document.getElementById('generateDetailBtn').disabled = true;
+  showDetailStatus(selected.length > 12 ? `已選擇 ${selected.length} 條，審閱可能需要較長時間...` : '審閱進度：0 / '+selected.length);
+
+  const contractText = document.getElementById('contractText').value.trim();
+  let done = 0;
+  await runPool(selected, async (clause) => {
+    try{
+      const detail = await runClauseDetail(contractText, clause);
+      state.details[clause.id] = detail;
+      renderClauseDetail(clause, detail);
+    }catch(e){
+      renderClauseError(clause, e.message);
+    }finally{
+      done++;
+      showDetailStatus('審閱進度：'+done+' / '+selected.length);
+    }
+  }, 3);
+
+  showDetailStatus('逐條詳細審閱完成。');
+  document.getElementById('generateDetailBtn').disabled = false;
+}
+
+async function retryClause(clause){
+  const el = document.getElementById('clause-'+clause.id);
+  if(el) el.outerHTML = clauseCardSkeleton(clause);
+  try{
+    const contractText = document.getElementById('contractText').value.trim();
+    const detail = await runClauseDetail(contractText, clause);
+    state.details[clause.id] = detail;
+    renderClauseDetail(clause, detail);
+  }catch(e){
+    renderClauseError(clause, e.message);
+  }
+}
+
+/* ---------------- export ---------------- */
+function buildExportText(){
+  const b = state.basicInfo || {};
+  let out = '';
+  out += '今日合約審閱摘要 — ' + (b.contractName || '未命名合約') + '\n';
+  out += '案號：' + document.getElementById('caseNo').textContent + '\n';
+  out += '生成日期：' + document.getElementById('caseDate').textContent + '\n\n';
+  out += '【合約基本資訊】\n';
+  out += '合約名稱：'+(b.contractName||'')+'\n';
+  out += '合約類型：'+(b.contractType||'')+'\n';
+  out += '當事方：'+(b.parties||'')+'\n';
+  out += '適用法律：'+(b.governingLaw||'')+'\n';
+  out += '爭議解決：'+(b.disputeResolution||'')+'\n';
+  out += '合約期限：'+(b.term||'')+'\n';
+  out += '幣別與金額：'+(b.currencyAmount||'')+'\n';
+  out += '整體風險評估：'+riskEmoji(b.overallRisk)+' '+riskLabel(b.overallRisk)+' — '+(b.overallRiskNote||'')+'\n\n';
+
+  (state.clauses||[]).forEach(c => {
+    const d = state.details[c.id];
+    out += '------------------------------\n';
+    out += '📌 條款 '+c.clauseNumber+' — '+c.clauseTitle+'\n\n';
+    if(d){
+      out += '【原始條文】\n'+d.originalText+'\n\n';
+      out += '【風險評等】'+riskEmoji(d.riskLevel)+' '+riskLabel(d.riskLevel)+'\n\n';
+      out += '【風險說明】\n'+(d.riskAnalysis||[]).map(x=>'- '+x).join('\n')+'\n\n';
+      out += '【稅局可能質疑點】'+(d.taxAuthorityConcerns||'')+'\n';
+      out += '【證據不足處】'+(d.evidenceGaps||'')+'\n';
+      out += '【潛在補稅風險】'+(d.taxExposure||'')+'\n\n';
+      out += '【建議修正條文】\n'+d.suggestedText+'\n\n';
+      out += '【修正理由】\n'+(d.revisionReasons||[]).map(x=>'- '+x).join('\n')+(d.isRedLine?'\n🚩 Red Line 必爭條款':'')+'\n\n';
+    }else{
+      out += '（尚未進行逐條詳細審閱，風險等級：'+riskLabel(c.riskLevel)+'）\n\n';
+    }
+  });
+
+  out += '------------------------------\n【整體風險摘要表】\n';
+  out += '條款 | 主題 | 風險等級 | 核心風險 | 建議優先處理\n';
+  (state.summaryTable||[]).forEach(r => {
+    out += r.clauseNumber+' | '+r.topic+' | '+riskEmoji(r.riskLevel)+riskLabel(r.riskLevel)+' | '+r.coreRisk+' | '+priorityLabel(r.priority)+'\n';
+  });
+
+  const n = state.negotiation || {};
+  out += '\n【談判建議與策略】\n🚩 Red Lines：\n'+(n.redLines||[]).map(x=>'- '+x).join('\n');
+  out += '\n\n⚠️ 重要議題：\n'+(n.important||[]).map(x=>'- '+x).join('\n');
+  out += '\n\n📝 優化建議：\n'+(n.optimization||[]).map(x=>'- '+x).join('\n');
+  out += '\n\n【可補強資料建議】\n'+(state.recommendedDocuments||[]).map(x=>'- '+x).join('\n');
+
+  return out;
+}
+
+/* ---------------- sample ---------------- */
+const SAMPLE_CONTRACT = `PURCHASE AND SUPPLY AGREEMENT (Excerpt)
+
+This Agreement is entered into between ABC Automotive Inc. ("Buyer") and [Supplier], a wholly-owned subsidiary of PeriPower Group ("Supplier"), for the supply of injection-molded automotive interior trim components.
+
+5.1 Payment Terms
+Buyer shall pay Supplier within ninety (90) days from the date of delivery acceptance. No interest shall accrue on late payments.
+
+6.3 Mold Ownership
+All molds and tooling used for production under this Agreement, regardless of who bears the cost, shall be deemed the property of Buyer upon commencement of production.
+
+8.2 Limitation of Liability
+In no event shall Supplier's total liability under this Agreement exceed the amount paid by Buyer in the three (3) months preceding the claim.
+
+11.4 Termination
+Either Party may terminate this Agreement for convenience upon fifteen (15) days' written notice to the other Party.
+
+14.1 Governing Law and Dispute Resolution
+This Agreement shall be governed by the laws of the State of Michigan, and any dispute shall be resolved exclusively in the state courts of Michigan.
+
+16.2 Confidentiality
+The confidentiality obligations under this Agreement shall survive termination indefinitely.`;
+
+/* ---------------- init ---------------- */
+document.getElementById('caseNo').textContent = genCaseNo();
+document.getElementById('caseDate').textContent = new Date().toLocaleDateString('zh-TW', {year:'numeric', month:'2-digit', day:'2-digit'}) + ' 產生';
+
+document.getElementById('contractText').addEventListener('input', e => {
+  document.getElementById('charCount').textContent = e.target.value.length + ' 字';
+});
+
+/* ---------------- API Key UI ---------------- */
+(function(){
+  const input = document.getElementById('apikeyInput');
+  const toggle = document.getElementById('apikeyToggle');
+  const status = document.getElementById('apikeyStatus');
+
+  function updateStatus(){
+    const v = input.value.trim();
+    if(!v){ status.textContent = '尚未輸入'; status.className = 'apikey-status empty'; return; }
+    if(!v.startsWith('sk-ant-')){ status.textContent = '格式不正確'; status.className = 'apikey-status empty'; return; }
+    status.textContent = '已輸入 ✓'; status.className = 'apikey-status ok';
+  }
+  input.addEventListener('input', updateStatus);
+  toggle.addEventListener('click', ()=>{
+    const isPass = input.type === 'password';
+    input.type = isPass ? 'text' : 'password';
+    toggle.textContent = isPass ? '隱藏' : '顯示';
+  });
+})();
+
+setupDropzone();
+
+document.getElementById('loadSampleBtn').addEventListener('click', () => {
+  const ta = document.getElementById('contractText');
+  ta.value = SAMPLE_CONTRACT;
+  document.getElementById('charCount').textContent = ta.value.length + ' 字';
+  document.getElementById('roleSelect').value = '供應商／賣方';
+  document.getElementById('typeSelect').value = '採購合約';
+  clearFileChip();
+});
+
+document.getElementById('submitBtn').addEventListener('click', startReview);
+document.getElementById('generateDetailBtn').addEventListener('click', generateDetails);
+
+document.getElementById('clausesList').addEventListener('click', e => {
+  if(e.target.classList.contains('retry-btn')){
+    const id = e.target.getAttribute('data-id');
+    const clause = state.clauses.find(c => c.id === id);
+    if(clause) retryClause(clause);
+  }
+});
+
+document.getElementById('copyMarkdownBtn').addEventListener('click', async () => {
+  const text = buildExportText();
+  const btn = document.getElementById('copyMarkdownBtn');
+  const old = btn.textContent;
+  try{
+    await navigator.clipboard.writeText(text);
+    btn.textContent = '已複製 ✓';
+  }catch(e){
+    btn.textContent = '複製失敗，請手動選取';
+  }
+  setTimeout(() => { btn.textContent = old; }, 1800);
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  document.getElementById('contractText').value = '';
+  document.getElementById('focusInput').value = '';
+  document.getElementById('entitySelect').selectedIndex = 0;
+  document.getElementById('roleSelect').selectedIndex = 0;
+  document.getElementById('typeSelect').selectedIndex = 0;
+  document.getElementById('charCount').textContent = '0 字';
+  clearFileChip();
+  showStatus('');
+  resetResults();
+});
+</script>
+</body>
+</html>
