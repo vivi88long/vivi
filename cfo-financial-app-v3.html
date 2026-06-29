@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CFO Financial Command Center v3</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- JSZip: 用於解析 docx/xlsx/pptx (都是 ZIP 格式) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+:root{--primary:#1B3A6B;--primary-light:#2D5299;--accent:#0EA5E9;--accent2:#10B981;--accent3:#F59E0B;--danger:#EF4444;--warning:#F59E0B;--success:#10B981;--neutral-50:#F8FAFC;--neutral-100:#F1F5F9;--neutral-200:#E2E8F0;--neutral-300:#CBD5E1;--neutral-400:#94A3B8;--neutral-500:#64748B;--neutral-600:#475569;--surface:#FFFFFF;--surface-2:#F8FAFC;--border:#E2E8F0;--text-primary:#0F172A;--text-secondary:#475569;--text-muted:#94A3B8;--shadow-sm:0 1px 3px rgba(0,0,0,0.06);--shadow-md:0 4px 16px rgba(0,0,0,0.08);--shadow-lg:0 10px 40px rgba(0,0,0,0.10);--radius:12px;--radius-sm:8px;--radius-lg:16px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter','Noto Sans TC',-apple-system,sans-serif;background:var(--neutral-50);color:var(--text-primary);font-size:14px;line-height:1.6;min-height:100vh;}
+.topbar{background:var(--primary);color:white;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.logo-mark{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),#60A5FA);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:white;}
+.app-title{font-weight:600;font-size:15px;letter-spacing:-.3px;}
+.app-subtitle{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.lang-btn,.role-select,.period-select{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;transition:background .2s;font-family:inherit;}
+.lang-btn:hover{background:rgba(255,255,255,.22);}
+.lang-btn.active{background:var(--accent);border-color:var(--accent);}
+option{background:var(--primary);}
+.fx-badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:5px;}
+.fx-dot{width:6px;height:6px;background:var(--accent2);border-radius:50%;}
+.layout{display:flex;min-height:calc(100vh - 56px);}
+.sidebar{width:210px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;flex-shrink:0;}
+.nav-section-label{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;padding:10px 16px 4px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;font-size:13px;color:var(--text-secondary);}
+.nav-item:hover{background:var(--neutral-50);color:var(--primary);}
+.nav-item.active{background:#EEF4FF;color:var(--primary);border-left-color:var(--primary);font-weight:500;}
+.nav-icon{font-size:15px;width:18px;text-align:center;}
+.nav-badge{margin-left:auto;background:var(--danger);color:white;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;}
+.main{flex:1;padding:24px;overflow-x:hidden;max-width:100%;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+.page-title{font-size:20px;font-weight:700;color:var(--text-primary);letter-spacing:-.5px;}
+.page-subtitle{font-size:12px;color:var(--text-muted);margin-top:3px;}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:inherit;display:flex;align-items:center;gap:5px;}
+.btn-primary{background:var(--primary);color:white;}
+.btn-primary:hover{background:var(--primary-light);}
+.btn-outline{background:white;color:var(--text-primary);border:1px solid var(--border);}
+.btn-outline:hover{background:var(--neutral-50);}
+.btn-danger{background:var(--danger);color:white;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;}
+.card-header{padding:14px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:600;color:var(--text-primary);}
+.card-body{padding:18px;}
+.ai-card{background:linear-gradient(135deg,var(--primary) 0%,#1a4080 50%,#0d2a5e 100%);border:none;border-radius:var(--radius-lg);padding:20px 24px;color:white;margin-bottom:20px;position:relative;overflow:hidden;}
+.ai-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(14,165,233,.25) 0%,transparent 70%);border-radius:50%;}
+.ai-label{display:inline-flex;align-items:center;gap:6px;background:rgba(14,165,233,.25);border:1px solid rgba(14,165,233,.4);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:12px;color:#7DD3FC;}
+.ai-dot{width:6px;height:6px;background:#7DD3FC;border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.ai-summary-title{font-size:16px;font-weight:700;margin-bottom:8px;letter-spacing:-.3px;}
+.ai-summary-text{font-size:13px;line-height:1.75;color:rgba(255,255,255,.85);max-width:780px;}
+.ai-tags{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.ai-tag{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:2px 10px;font-size:11px;color:rgba(255,255,255,.8);}
+.ai-tag.warn{background:rgba(245,158,11,.2);border-color:rgba(245,158,11,.4);color:#FCD34D;}
+.ai-tag.ok{background:rgba(16,185,129,.2);border-color:rgba(16,185,129,.4);color:#6EE7B7;}
+.ai-tag.risk{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4);color:#FCA5A5;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:14px;}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:14px;}
+.mb-16{margin-bottom:16px;}
+.mb-20{margin-bottom:20px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;}
+.kpi-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi-card.kpi-blue::after{background:var(--accent);}
+.kpi-card.kpi-green::after{background:var(--accent2);}
+.kpi-card.kpi-amber::after{background:var(--accent3);}
+.kpi-card.kpi-purple::after{background:#8B5CF6;}
+.kpi-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.kpi-value{font-size:24px;font-weight:700;color:var(--text-primary);letter-spacing:-1px;line-height:1.1;}
+.kpi-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.kpi-change{display:flex;align-items:center;gap:4px;margin-top:6px;font-size:11px;font-weight:500;}
+.kpi-change.up{color:var(--success);}
+.kpi-change.down{color:var(--danger);}
+.entity-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;}
+.entity-header{padding:12px 16px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border);}
+.entity-name{font-weight:600;font-size:13px;}
+.entity-type{font-size:11px;color:var(--text-muted);}
+.health-badge{margin-left:auto;display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.health-badge.green{background:#DCFCE7;color:#166534;}
+.health-badge.yellow{background:#FEF9C3;color:#854D0E;}
+.health-dot{width:6px;height:6px;border-radius:50%;}
+.health-dot.green{background:var(--success);}
+.health-dot.yellow{background:var(--warning);}
+.entity-metrics{padding:12px 16px;display:flex;flex-direction:column;gap:9px;}
+.metric-row{display:flex;justify-content:space-between;align-items:center;}
+.metric-name{font-size:12px;color:var(--text-secondary);}
+.metric-val{font-size:12px;font-weight:600;color:var(--text-primary);}
+.metric-bar-wrap{width:100%;background:var(--neutral-100);border-radius:4px;height:4px;margin-top:2px;overflow:hidden;}
+.metric-bar{height:100%;border-radius:4px;}
+.bar-green{background:var(--success);}
+.bar-yellow{background:var(--warning);}
+.bar-blue{background:var(--accent);}
+.risk-panel{display:flex;flex-direction:column;gap:8px;}
+.risk-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);border-left:4px solid transparent;}
+.risk-item.high{border-left-color:var(--danger);}
+.risk-item.medium{border-left-color:var(--warning);}
+.risk-item.low{border-left-color:var(--success);}
+.risk-dot{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.risk-dot.high{background:var(--danger);}
+.risk-dot.medium{background:var(--warning);}
+.risk-dot.low{background:var(--success);}
+.risk-title{font-size:12px;font-weight:600;color:var(--text-primary);}
+.risk-desc{font-size:11px;color:var(--text-secondary);margin-top:2px;line-height:1.5;}
+.risk-entity{font-size:10px;color:var(--text-muted);margin-top:3px;}
+.tax-items{display:flex;flex-direction:column;gap:7px;}
+.tax-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);}
+.tax-date-box{background:var(--neutral-100);border-radius:6px;padding:3px 7px;}
+.tax-date{font-size:11px;font-weight:700;color:var(--text-muted);min-width:40px;text-align:center;}
+.tax-desc{font-size:12px;color:var(--text-primary);flex:1;}
+.tax-status{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;}
+.tax-status.pending{background:#FEF9C3;color:#854D0E;}
+.tax-status.urgent{background:#FEE2E2;color:#991B1B;}
+.tax-status.done{background:#DCFCE7;color:#166534;}
+.tp-table{width:100%;border-collapse:collapse;font-size:12px;}
+.tp-table th{background:var(--neutral-50);color:var(--text-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
+.tp-table td{padding:9px 12px;border-bottom:1px solid var(--neutral-100);color:var(--text-primary);}
+.tp-table tr:hover td{background:var(--neutral-50);}
+.tp-range{font-size:11px;color:var(--text-muted);}
+.tp-alert{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.tp-alert.ok{background:#DCFCE7;color:#166534;}
+.tp-alert.warn{background:#FEF9C3;color:#854D0E;}
+.page{display:none;}
+.page.active{display:block;}
+.chart-wrap{position:relative;height:200px;}
+.chart-wrap-lg{position:relative;height:260px;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:white;border-radius:var(--radius-lg);padding:24px;width:440px;box-shadow:var(--shadow-lg);}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:18px;}
+.fx-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fx-input-group label{font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;}
+.fx-input{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text-primary);outline:none;transition:border-color .15s;}
+.fx-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+.data-entry-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.form-group label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;}
+.form-input,.form-select{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text-primary);outline:none;transition:border-color .15s;background:white;}
+.form-input:focus,.form-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+.section-title{font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:12px;}
+.save-notice{background:#DCFCE7;border:1px solid #86EFAC;border-radius:8px;padding:10px 14px;color:#166534;font-size:13px;font-weight:500;display:none;margin-top:12px;}
+
+/* ═══════ FILE UPLOAD ═══════ */
+.upload-zone{border:2px dashed var(--neutral-300);border-radius:var(--radius-lg);background:var(--neutral-50);padding:36px 24px;text-align:center;transition:all .2s;cursor:pointer;position:relative;}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:#EFF9FF;}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:44px;margin-bottom:10px;line-height:1;}
+.upload-title{font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:5px;}
+.upload-subtitle{font-size:12px;color:var(--text-muted);margin-bottom:12px;}
+.upload-formats{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
+.format-badge{background:white;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--text-secondary);}
+
+/* ── API KEY NOTICE ── */
+.apikey-notice{background:#FFF7ED;border:1px solid #FED7AA;border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px;}
+.apikey-notice-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+.apikey-notice-title{font-size:13px;font-weight:600;color:#92400E;margin-bottom:4px;}
+.apikey-notice-text{font-size:12px;color:#B45309;line-height:1.5;}
+.apikey-input-wrap{display:flex;gap:8px;margin-top:8px;}
+.apikey-input{flex:1;padding:7px 11px;border:1px solid #FED7AA;border-radius:8px;font-size:12px;font-family:inherit;outline:none;background:white;color:var(--text-primary);}
+.apikey-input:focus{border-color:var(--accent);}
+.apikey-save-btn{padding:7px 14px;background:#92400E;color:white;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.apikey-save-btn:hover{background:#78350F;}
+.apikey-ok{background:#DCFCE7;border-color:#86EFAC;}
+.apikey-ok .apikey-notice-title{color:#166534;}
+.apikey-ok .apikey-notice-text{color:#15803D;}
+
+/* FILE LIST */
+.file-list{display:flex;flex-direction:column;gap:8px;}
+.file-item{display:flex;align-items:center;gap:12px;background:white;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;position:relative;overflow:hidden;}
+.file-item-icon{font-size:22px;flex-shrink:0;}
+.file-item-info{flex:1;min-width:0;}
+.file-item-name{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.file-item-meta{font-size:11px;color:var(--text-muted);margin-top:1px;}
+.file-item-extract{font-size:10px;color:var(--accent);margin-top:2px;font-weight:500;}
+.file-status-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;flex-shrink:0;}
+.file-status-badge.ready{background:#DCFCE7;color:#166534;}
+.file-status-badge.loading{background:#EFF6FF;color:#1D4ED8;}
+.file-status-badge.analyzing{background:#F3E8FF;color:#6B21A8;}
+.file-status-badge.done{background:#F3E8FF;color:#6B21A8;}
+.file-status-badge.error{background:#FEE2E2;color:#991B1B;}
+.file-remove{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px;transition:all .15s;flex-shrink:0;}
+.file-remove:hover{background:var(--neutral-100);color:var(--danger);}
+.file-progress{position:absolute;bottom:0;left:0;height:3px;background:var(--accent);transition:width .4s ease;}
+
+/* ANALYSIS OPTIONS */
+.analysis-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0;}
+.analysis-option{background:white;border:2px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:all .15s;text-align:left;}
+.analysis-option:hover{border-color:var(--accent);background:#EFF9FF;}
+.analysis-option.selected{border-color:var(--primary);background:#EEF4FF;}
+.option-icon{font-size:22px;margin-bottom:5px;}
+.option-title{font-size:13px;font-weight:600;color:var(--text-primary);}
+.option-desc{font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.4;}
+
+/* RESULT */
+.analysis-result{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px;}
+.result-header{background:linear-gradient(135deg,var(--primary),#1a4080);color:white;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.result-title{font-size:14px;font-weight:700;}
+.result-meta{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px;}
+.result-body{padding:20px;}
+.result-text{font-size:13px;color:var(--text-secondary);line-height:1.8;white-space:pre-wrap;}
+.result-text strong{color:var(--primary);}
+.result-highlight{background:#FEF9C3;border-left:3px solid var(--warning);padding:10px 14px;border-radius:0 8px 8px 0;margin:8px 0;font-size:13px;color:var(--text-primary);line-height:1.6;}
+.result-risk{background:#FEE2E2;border-left:3px solid var(--danger);padding:10px 14px;border-radius:0 8px 8px 0;margin:8px 0;font-size:13px;color:#7F1D1D;line-height:1.6;}
+.result-ok{background:#DCFCE7;border-left:3px solid var(--success);padding:10px 14px;border-radius:0 8px 8px 0;margin:8px 0;font-size:13px;color:#14532D;line-height:1.6;}
+
+/* PREVIEW BOX (show extracted text) */
+.text-preview{background:var(--neutral-50);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:11px;color:var(--text-muted);line-height:1.6;max-height:120px;overflow-y:auto;margin-top:8px;white-space:pre-wrap;font-family:'Courier New',monospace;}
+
+/* ANALYZING */
+.analyzing-card{background:linear-gradient(135deg,#EFF6FF,#F0FDF4);border:1px solid var(--accent);border-radius:var(--radius-lg);padding:24px;text-align:center;margin-bottom:20px;}
+.analyzing-animation{display:flex;justify-content:center;gap:6px;margin-bottom:12px;}
+.analyzing-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:bounce 1.2s infinite;}
+.analyzing-dot:nth-child(2){animation-delay:.2s;background:var(--accent2);}
+.analyzing-dot:nth-child(3){animation-delay:.4s;background:var(--accent3);}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-10px)}}
+.progress-steps{display:flex;flex-direction:column;gap:5px;margin-top:12px;text-align:left;max-width:320px;margin-left:auto;margin-right:auto;}
+.progress-step{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);}
+.step-icon{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.step-icon.done{background:#DCFCE7;color:var(--success);}
+.step-icon.active{background:#DBEAFE;color:var(--accent);}
+.step-icon.wait{background:var(--neutral-100);color:var(--text-muted);}
+
+/* ERROR BOX */
+.error-box{background:#FFF1F2;border:1px solid #FECDD3;border-radius:var(--radius);padding:14px 16px;}
+.error-box-title{font-size:13px;font-weight:700;color:#9F1239;margin-bottom:6px;}
+.error-box-text{font-size:12px;color:#BE123C;line-height:1.5;}
+.error-steps{margin-top:10px;display:flex;flex-direction:column;gap:4px;}
+.error-step{font-size:12px;color:var(--text-secondary);display:flex;align-items:flex-start;gap:6px;}
+
+/* AI CHAT */
+.ai-chat-panel{position:fixed;right:20px;bottom:20px;width:360px;z-index:150;}
+.ai-chat-toggle{display:flex;align-items:center;gap:7px;background:var(--primary);color:white;padding:11px 18px;border-radius:50px;cursor:pointer;box-shadow:var(--shadow-lg);font-size:13px;font-weight:600;transition:all .2s;justify-content:center;border:none;font-family:inherit;width:100%;}
+.ai-chat-toggle:hover{background:var(--primary-light);}
+.ai-chat-box{display:none;flex-direction:column;background:white;border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);border:1px solid var(--border);overflow:hidden;margin-bottom:8px;height:400px;}
+.ai-chat-box.open{display:flex;}
+.ai-chat-header{background:var(--primary);color:white;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
+.ai-chat-header-title{font-weight:600;font-size:13px;display:flex;align-items:center;gap:7px;}
+.ai-chat-close{cursor:pointer;background:none;border:none;color:white;font-size:17px;}
+.ai-chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--neutral-50);}
+.msg{max-width:85%;}
+.msg.ai{align-self:flex-start;}
+.msg.user{align-self:flex-end;}
+.msg-bubble{padding:9px 12px;border-radius:10px;font-size:12px;line-height:1.55;}
+.msg.ai .msg-bubble{background:white;border:1px solid var(--border);color:var(--text-primary);border-radius:3px 10px 10px 10px;}
+.msg.user .msg-bubble{background:var(--primary);color:white;border-radius:10px 3px 10px 10px;}
+.ai-chat-input-area{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:7px;background:white;}
+.ai-chat-input{flex:1;border:1px solid var(--border);border-radius:18px;padding:7px 12px;font-size:12px;font-family:inherit;outline:none;height:36px;transition:border-color .15s;}
+.ai-chat-input:focus{border-color:var(--accent);}
+.ai-send-btn{background:var(--primary);color:white;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--neutral-300);border-radius:10px;}
+@media(max-width:1100px){.grid-4{grid-template-columns:repeat(2,1fr);}.grid-3{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:768px){.sidebar{display:none;}.grid-3,.grid-4,.grid-2,.grid-2-1,.grid-1-2,.data-entry-grid,.analysis-options{grid-template-columns:1fr;}.main{padding:14px;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-mark">CFO</div>
+    <div>
+      <div class="app-title">集團財務指揮中心 v3</div>
+      <div class="app-subtitle">COMART Group · Financial Command Center</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div style="display:flex;gap:3px;">
+      <button class="lang-btn active" onclick="setLang(this)">繁中</button>
+      <button class="lang-btn" onclick="setLang(this)">EN</button>
+      <button class="lang-btn" onclick="setLang(this)">VI</button>
+    </div>
+    <select class="role-select"><option>👤 CFO</option><option>🏛 董事會</option><option>🇹🇼 台灣財務</option><option>🇻🇳 越南財務</option><option>🇨🇳 大陸財務</option></select>
+    <select class="period-select"><option>2025年6月</option><option>2025年5月</option><option>2025 Q2</option></select>
+    <div class="fx-badge" onclick="openFxModal()"><div class="fx-dot"></div><span id="fxBadgeText">USD/TWD 32.5</span></div>
+  </div>
+</div>
+
+<div class="layout">
+<div class="sidebar">
+  <div class="nav-section-label">總覽</div>
+  <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>儀表板</div>
+  <div class="nav-section-label">📂 文件分析</div>
+  <div class="nav-item" onclick="showPage('upload',this)"><span class="nav-icon">📁</span>文件上傳分析<span class="nav-badge">v3</span></div>
+  <div class="nav-section-label">財務報表</div>
+  <div class="nav-item" onclick="showPage('pnl',this)"><span class="nav-icon">📈</span>損益表</div>
+  <div class="nav-item" onclick="showPage('balance',this)"><span class="nav-icon">⚖️</span>資產負債表</div>
+  <div class="nav-item" onclick="showPage('cashflow',this)"><span class="nav-icon">💰</span>現金流量表</div>
+  <div class="nav-section-label">稅務合規</div>
+  <div class="nav-item" onclick="showPage('tax',this)"><span class="nav-icon">🧾</span>稅務監控<span class="nav-badge">3</span></div>
+  <div class="nav-item" onclick="showPage('tp',this)"><span class="nav-icon">🔗</span>移轉訂價<span class="nav-badge">1</span></div>
+  <div class="nav-item" onclick="showPage('risk',this)"><span class="nav-icon">⚠️</span>風險預警</div>
+  <div class="nav-section-label">管理分析</div>
+  <div class="nav-item" onclick="showPage('budget',this)"><span class="nav-icon">🎯</span>預算管理</div>
+  <div class="nav-item" onclick="showPage('dataEntry',this)"><span class="nav-icon">✏️</span>資料輸入</div>
+</div>
+
+<div class="main">
+
+<!-- ════ DASHBOARD ════ -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div><div class="page-title">集團財務儀表板</div><div class="page-subtitle">2025年6月 · 即時綜合概覽</div></div>
+    <div class="header-actions">
+      <button class="btn btn-outline" onclick="showPage('upload',document.querySelectorAll('.nav-item')[1])">📁 上傳文件分析</button>
+      <button class="btn btn-primary" onclick="generateAISummary(event)">✨ AI更新摘要</button>
+    </div>
+  </div>
+  <div class="ai-card mb-20">
+    <div class="ai-label"><div class="ai-dot"></div>AI 執行長財務摘要 · 本月重點</div>
+    <div class="ai-summary-title">2025年6月 集團財務健康度：整體穩健，越南毛利率需關注</div>
+    <div class="ai-summary-text" id="aiSummaryText">本月集團合併營收達 USD 4,280千，較上月成長 3.2%。台灣母公司維持穩健獲利，淨利率 8.2%；越南製造基地毛利率下滑至 18.3%，低於內部警戒線 20%。<strong style="color:#7DD3FC">移轉訂價：台越關聯交易毛利率 11.2%，接近常規交易下限，建議本季完成備查文件更新。</strong> 稅務申報：越南Q2 CIT申報截止日 7/30。</div>
+    <div class="ai-tags"><div class="ai-tag ok">✅ 台灣：正常</div><div class="ai-tag warn">⚠️ 越南毛利率偏低</div><div class="ai-tag risk">🔴 TP文件待更新</div><div class="ai-tag warn">⏰ 越南CIT 7/30</div></div>
+  </div>
+  <div class="grid-4 mb-16">
+    <div class="kpi-card kpi-blue"><div class="kpi-label">合併營收</div><div class="kpi-value">$4,280K</div><div class="kpi-sub">USD · 本月合併</div><div class="kpi-change up">▲ 3.2% vs上月</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-label">合併毛利率</div><div class="kpi-value">21.8%</div><div class="kpi-sub">目標：25.0%</div><div class="kpi-change down">▼ 1.1% vs上月</div></div>
+    <div class="kpi-card kpi-amber"><div class="kpi-label">EBITDA</div><div class="kpi-value">$892K</div><div class="kpi-sub">EBITDA率 20.8%</div><div class="kpi-change up">▲ 1.8% vs上月</div></div>
+    <div class="kpi-card kpi-purple"><div class="kpi-label">集團現金</div><div class="kpi-value">$3,140K</div><div class="kpi-sub">三地合計</div><div class="kpi-change up">▲ 2.1% vs上月</div></div>
+  </div>
+  <div class="grid-1-2 mb-16">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="entity-card"><div class="entity-header"><span style="font-size:20px">🇹🇼</span><div><div class="entity-name">台灣母公司</div><div class="entity-type">控股·銷售·管理</div></div><div class="health-badge green"><div class="health-dot green"></div>正常</div></div><div class="entity-metrics"><div><div class="metric-row"><span class="metric-name">毛利率</span><span class="metric-val" style="color:var(--success)">28.4%</span></div><div class="metric-bar-wrap"><div class="metric-bar bar-green" style="width:75%"></div></div></div><div><div class="metric-row"><span class="metric-name">淨利率</span><span class="metric-val">8.2%</span></div><div class="metric-bar-wrap"><div class="metric-bar bar-blue" style="width:45%"></div></div></div></div></div>
+      <div class="entity-card"><div class="entity-header"><span style="font-size:20px">🇻🇳</span><div><div class="entity-name">越南製造基地</div><div class="entity-type">製造·OEM/ODM</div></div><div class="health-badge yellow"><div class="health-dot yellow"></div>注意</div></div><div class="entity-metrics"><div><div class="metric-row"><span class="metric-name">毛利率</span><span class="metric-val" style="color:var(--warning)">18.3% ⚠️</span></div><div class="metric-bar-wrap"><div class="metric-bar bar-yellow" style="width:48%"></div></div></div><div><div class="metric-row"><span class="metric-name">原料成本率</span><span class="metric-val">54.2%</span></div><div class="metric-bar-wrap"><div class="metric-bar bar-yellow" style="width:65%"></div></div></div></div></div>
+      <div class="entity-card"><div class="entity-header"><span style="font-size:20px">🇨🇳</span><div><div class="entity-name">大陸研發製造</div><div class="entity-type">研發·製造·成本中心</div></div><div class="health-badge green"><div class="health-dot green"></div>正常</div></div><div class="entity-metrics"><div><div class="metric-row"><span class="metric-name">R&D費用率</span><span class="metric-val">12.4%</span></div><div class="metric-bar-wrap"><div class="metric-bar bar-blue" style="width:55%"></div></div></div><div><div class="metric-row"><span class="metric-name">預算達成率</span><span class="metric-val">88.2%</span></div><div class="metric-bar-wrap"><div class="metric-bar bar-green" style="width:88%"></div></div></div></div></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">📈 集團營收趨勢</div></div><div class="card-body"><div class="chart-wrap-lg"><canvas id="revenueTrendChart"></canvas></div></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-header"><div class="card-title">⚠️ 風險預警</div><span style="font-size:11px;color:var(--danger);font-weight:600;">4項需關注</span></div><div class="card-body"><div class="risk-panel"><div class="risk-item high"><div class="risk-dot high"></div><div><div class="risk-title">移轉訂價毛利率接近下限</div><div class="risk-desc">台越關聯交易毛利率11.2%，常規區間下限10%。</div><div class="risk-entity">🇹🇼↔🇻🇳 製造服務費</div></div></div><div class="risk-item high"><div class="risk-dot high"></div><div><div class="risk-title">越南CIT Q2申報逾期風險</div><div class="risk-desc">7/30截止，罰款稅額20%+滯納金0.03%/天。</div></div></div><div class="risk-item medium"><div class="risk-dot medium"></div><div><div class="risk-title">越南毛利率持續下滑</div><div class="risk-desc">連續2個月低於警戒線20%。</div></div></div><div class="risk-item medium"><div class="risk-dot medium"></div><div><div class="risk-title">CFC受控外國企業申報</div><div class="risk-desc">台灣CFC新制，需評估子公司盈餘合併課稅。</div></div></div></div></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">🗓️ 稅務申報日曆</div></div><div class="card-body"><div class="tax-items"><div class="tax-item"><div class="tax-date-box"><div class="tax-date">7/15</div></div><span>🇹🇼</span><div class="tax-desc">台灣營業稅（5-6月）</div><div class="tax-status urgent">🔴 10天後</div></div><div class="tax-item"><div class="tax-date-box"><div class="tax-date">7/20</div></div><span>🇨🇳</span><div class="tax-desc">大陸增值稅月申報</div><div class="tax-status pending">⏳ 15天後</div></div><div class="tax-item"><div class="tax-date-box"><div class="tax-date">7/30</div></div><span>🇻🇳</span><div class="tax-desc">越南CIT Q2預繳申報</div><div class="tax-status urgent">🔴 25天後</div></div><div class="tax-item"><div class="tax-date-box"><div class="tax-date">6/20</div></div><span>🇨🇳</span><div class="tax-desc">大陸增值稅（5月）</div><div class="tax-status done">✅ 已完成</div></div></div></div></div>
+  </div>
+</div>
+
+<!-- ════ FILE UPLOAD PAGE ════ -->
+<div class="page" id="page-upload">
+  <div class="page-header">
+    <div><div class="page-title">📁 文件上傳分析</div><div class="page-subtitle">瀏覽器端解析文件 → AI財務分析 · 支援所有主流格式</div></div>
+    <div class="header-actions">
+      <button class="btn btn-outline" id="clearAllBtn" onclick="clearAllFiles()" style="display:none;">🗑️ 清除全部</button>
+      <button class="btn btn-primary" id="analyzeAllBtn" onclick="analyzeAllFiles()" style="display:none;">🚀 開始分析</button>
+    </div>
+  </div>
+
+  <!-- API KEY NOTICE -->
+  <div class="apikey-notice" id="apikeyNotice">
+    <div class="apikey-notice-icon">🔑</div>
+    <div style="flex:1;">
+      <div class="apikey-notice-title">需要設定 Anthropic API Key</div>
+      <div class="apikey-notice-text">
+        此 APP 以獨立 HTML 檔案運行，需要您提供 API Key 才能呼叫 AI 分析功能。<br>
+        API Key 僅儲存於您的瀏覽器本地端（localStorage），不會傳送至任何其他伺服器。<br>
+        取得方式：前往 <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--accent);">console.anthropic.com</a> → Settings → API Keys
+      </div>
+      <div class="apikey-input-wrap">
+        <input class="apikey-input" id="apikeyInput" type="password" placeholder="sk-ant-api03-..." oninput="onApiKeyInput()">
+        <button class="apikey-save-btn" onclick="saveApiKey()">✓ 儲存並啟用</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD ZONE -->
+  <div class="card mb-20">
+    <div class="card-body" style="padding:20px;">
+      <div class="upload-zone" id="uploadZone" ondragover="onDragOver(event)" ondragleave="onDragLeave()" ondrop="onDrop(event)">
+        <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.ppt,.pptx,.txt,.csv,.md" onchange="onFileSelect(event)">
+        <div class="upload-icon">📂</div>
+        <div class="upload-title">拖曳文件至此，或點擊選擇</div>
+        <div class="upload-subtitle">文件在您的瀏覽器內解析，不會上傳至其他伺服器</div>
+        <div class="upload-formats">
+          <span class="format-badge">📄 PDF</span>
+          <span class="format-badge">📊 Excel xlsx/xls</span>
+          <span class="format-badge">📝 Word docx/doc</span>
+          <span class="format-badge">📑 PPT pptx</span>
+          <span class="format-badge">📃 TXT / CSV</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYSIS TYPE -->
+  <div class="card mb-20" id="analysisTypeCard" style="display:none;">
+    <div class="card-header"><div class="card-title">🎯 選擇分析模式</div></div>
+    <div class="card-body">
+      <div class="analysis-options">
+        <div class="analysis-option selected" onclick="selectType(this,'financial')"><div class="option-icon">📊</div><div class="option-title">財務數據擷取</div><div class="option-desc">提取KPI數字，歸屬三地，標記異常</div></div>
+        <div class="analysis-option" onclick="selectType(this,'tax')"><div class="option-icon">🧾</div><div class="option-title">稅務合規分析</div><div class="option-desc">稅局查核角度，識別補稅風險</div></div>
+        <div class="analysis-option" onclick="selectType(this,'tp')"><div class="option-icon">🔗</div><div class="option-title">移轉訂價審閱</div><div class="option-desc">TP毛利率區間，備查文件缺口</div></div>
+        <div class="analysis-option" onclick="selectType(this,'contract')"><div class="option-icon">📝</div><div class="option-title">合約法務分析</div><div class="option-desc">財務條款，不利條款，稅務影響</div></div>
+        <div class="analysis-option" onclick="selectType(this,'report')"><div class="option-icon">📋</div><div class="option-title">財務報告摘要</div><div class="option-desc">轉換為執行長級一頁摘要</div></div>
+        <div class="analysis-option" onclick="selectType(this,'custom')"><div class="option-icon">✨</div><div class="option-title">自定義指示</div><div class="option-desc">自行輸入CFO分析指示</div></div>
+      </div>
+      <div id="customPromptArea" style="display:none;">
+        <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:5px;">自定義分析指示</label>
+        <textarea id="customPromptInput" class="form-input" style="height:70px;resize:vertical;" placeholder="例如：請分析此文件中的越南稅務風險，從稅局查核角度提出潛在補稅風險..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILE LIST -->
+  <div id="fileListSection" style="display:none;">
+    <div class="card mb-20">
+      <div class="card-header"><div class="card-title">📋 已選擇文件</div><span id="fileCountBadge" style="font-size:12px;color:var(--text-muted);"></span></div>
+      <div class="card-body"><div class="file-list" id="fileList"></div></div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="analysisResultsSection"></div>
+</div>
+
+<!-- ════ OTHER PAGES (simplified) ════ -->
+<div class="page" id="page-pnl">
+  <div class="page-header"><div><div class="page-title">📈 損益表</div><div class="page-subtitle">合併·各地拆分·預算對比</div></div></div>
+  <div class="grid-4 mb-16">
+    <div class="kpi-card kpi-blue"><div class="kpi-label">本月營收</div><div class="kpi-value">$4,280K</div><div class="kpi-change up">▲ 3.2%</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-label">毛利</div><div class="kpi-value">$933K</div><div class="kpi-sub">毛利率21.8%</div></div>
+    <div class="kpi-card kpi-amber"><div class="kpi-label">營業利益</div><div class="kpi-value">$584K</div></div>
+    <div class="kpi-card kpi-purple"><div class="kpi-label">稅後淨利</div><div class="kpi-value">$421K</div></div>
+  </div>
+  <div class="card"><div class="card-header"><div class="card-title">損益趨勢</div></div><div class="card-body"><div class="chart-wrap-lg"><canvas id="pnlChart"></canvas></div></div></div>
+</div>
+
+<div class="page" id="page-tax">
+  <div class="page-header"><div><div class="page-title">🧾 稅務監控中心</div></div></div>
+  <div class="grid-3 mb-16">
+    <div class="kpi-card kpi-blue"><div class="kpi-label">台灣有效稅率</div><div class="kpi-value">18.2%</div><div class="kpi-sub">法定20%</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-label">越南有效稅率</div><div class="kpi-value">12.4%</div><div class="kpi-sub">優惠稅率適用中</div></div>
+    <div class="kpi-card kpi-amber"><div class="kpi-label">大陸有效稅率</div><div class="kpi-value">15.0%</div><div class="kpi-sub">高新技術企業</div></div>
+  </div>
+  <div class="card"><div class="card-header"><div class="card-title">稅率趨勢</div></div><div class="card-body"><div class="chart-wrap-lg"><canvas id="taxChart"></canvas></div></div></div>
+</div>
+
+<div class="page" id="page-tp">
+  <div class="page-header"><div><div class="page-title">🔗 移轉訂價監控</div></div></div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">關聯交易毛利率監控</div></div>
+    <div class="card-body" style="padding:0;overflow-x:auto;">
+      <table class="tp-table"><thead><tr><th>交易方向</th><th>類型</th><th>月金額</th><th>毛利率</th><th>常規區間</th><th>狀態</th></tr></thead>
+      <tbody>
+        <tr><td>🇹🇼→🇻🇳</td><td>製造服務費</td><td>$1,240K</td><td style="color:var(--warning);font-weight:700;">11.2%</td><td class="tp-range">10%~18%</td><td><span class="tp-alert warn">⚠️ 接近下限</span></td></tr>
+        <tr><td>🇹🇼→🇻🇳</td><td>管理服務費</td><td>$180K</td><td style="color:var(--success);font-weight:700;">3.2%</td><td class="tp-range">2%~6%</td><td><span class="tp-alert ok">✅ 正常</span></td></tr>
+        <tr><td>🇹🇼→🇨🇳</td><td>技術授權金</td><td>$320K</td><td style="color:var(--success);font-weight:700;">5.0%</td><td class="tp-range">3%~8%</td><td><span class="tp-alert ok">✅ 正常</span></td></tr>
+        <tr><td>🇻🇳→🇹🇼</td><td>成品銷售</td><td>$980K</td><td style="color:var(--success);font-weight:700;">14.8%</td><td class="tp-range">12%~22%</td><td><span class="tp-alert ok">✅ 正常</span></td></tr>
+      </tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-risk">
+  <div class="page-header"><div><div class="page-title">⚠️ 風險預警中心</div></div></div>
+  <div class="card"><div class="card-header"><div class="card-title">全部風險項目</div></div><div class="card-body"><div class="risk-panel">
+    <div class="risk-item high"><div class="risk-dot high"></div><div><div class="risk-title">移轉訂價毛利率接近下限</div><div class="risk-desc">台越製造服務費毛利率11.2%，常規下限10%，補稅風險USD 48K~96K。</div></div></div>
+    <div class="risk-item high"><div class="risk-dot high"></div><div><div class="risk-title">越南CIT Q2申報逾期風險</div><div class="risk-desc">7/30截止，逾期罰款應納稅額20%+0.03%/天。</div></div></div>
+    <div class="risk-item medium"><div class="risk-dot medium"></div><div><div class="risk-title">越南毛利率持續下滑</div><div class="risk-desc">連續2個月低於警戒線，影響全年預算達成率。</div></div></div>
+    <div class="risk-item medium"><div class="risk-dot medium"></div><div><div class="risk-title">CFC受控外國企業申報</div><div class="risk-desc">台灣CFC新制，需評估子公司盈餘合併課稅。</div></div></div>
+    <div class="risk-item medium"><div class="risk-dot medium"></div><div><div class="risk-title">PE常設機構風險</div><div class="risk-desc">台灣業務人員頻繁赴越/陸，需評估PE認定風險。</div></div></div>
+    <div class="risk-item low"><div class="risk-dot low"></div><div><div class="risk-title">大陸增值稅留抵退稅</div><div class="risk-desc">留抵稅額CNY 280K，可申請退稅。</div></div></div>
+  </div></div></div>
+</div>
+
+<div class="page" id="page-budget">
+  <div class="page-header"><div><div class="page-title">🎯 預算管理</div></div></div>
+  <div class="grid-4 mb-16">
+    <div class="kpi-card kpi-blue"><div class="kpi-label">YTD營收達成率</div><div class="kpi-value">81.4%</div><div class="kpi-change down">▼ 落後18.6%</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-label">毛利達成率</div><div class="kpi-value">78.2%</div></div>
+    <div class="kpi-card kpi-amber"><div class="kpi-label">費用控制率</div><div class="kpi-value">94.8%</div><div class="kpi-change up">▲ 低於預算</div></div>
+    <div class="kpi-card kpi-purple"><div class="kpi-label">淨利達成率</div><div class="kpi-value">72.4%</div></div>
+  </div>
+  <div class="card"><div class="card-header"><div class="card-title">預算達成率趨勢</div></div><div class="card-body"><div class="chart-wrap-lg"><canvas id="budgetChart"></canvas></div></div></div>
+</div>
+
+<div class="page" id="page-balance">
+  <div class="page-header"><div><div class="page-title">⚖️ 資產負債表</div></div></div>
+  <div class="grid-4 mb-16">
+    <div class="kpi-card kpi-blue"><div class="kpi-label">總資產</div><div class="kpi-value">$18.4M</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-label">流動比率</div><div class="kpi-value">2.18</div></div>
+    <div class="kpi-card kpi-amber"><div class="kpi-label">負債比</div><div class="kpi-value">38.4%</div></div>
+    <div class="kpi-card kpi-purple"><div class="kpi-label">淨值</div><div class="kpi-value">$11.3M</div></div>
+  </div>
+  <div class="card"><div class="card-header"><div class="card-title">資產結構</div></div><div class="card-body"><div class="chart-wrap-lg"><canvas id="bsChart"></canvas></div></div></div>
+</div>
+
+<div class="page" id="page-cashflow">
+  <div class="page-header"><div><div class="page-title">💰 現金流量表</div></div></div>
+  <div class="grid-3 mb-16">
+    <div class="kpi-card kpi-green"><div class="kpi-label">營運現金流</div><div class="kpi-value">$842K</div></div>
+    <div class="kpi-card kpi-amber"><div class="kpi-label">投資現金流</div><div class="kpi-value" style="color:var(--danger)">-$320K</div></div>
+    <div class="kpi-card kpi-blue"><div class="kpi-label">融資現金流</div><div class="kpi-value" style="color:var(--danger)">-$180K</div></div>
+  </div>
+  <div class="card"><div class="card-header"><div class="card-title">現金流趨勢</div></div><div class="card-body"><div class="chart-wrap-lg"><canvas id="cfChart"></canvas></div></div></div>
+</div>
+
+<div class="page" id="page-dataEntry">
+  <div class="page-header"><div><div class="page-title">✏️ 財務資料輸入</div></div><div class="header-actions"><button class="btn btn-primary" onclick="saveData()">💾 儲存</button></div></div>
+  <div class="card mb-16"><div class="card-header"><div class="card-title">損益表數據</div></div><div class="card-body">
+    <div class="data-entry-grid mb-16">
+      <div class="form-group"><label>申報期間</label><select class="form-select"><option>2025年6月</option></select></div>
+      <div class="form-group"><label>申報實體</label><select class="form-select"><option>台灣母公司</option><option>越南製造基地</option><option>大陸研發製造</option></select></div>
+      <div class="form-group"><label>幣別</label><select class="form-select"><option>TWD</option><option>VND</option><option>CNY</option><option>USD</option></select></div>
+    </div>
+    <div class="data-entry-grid">
+      <div class="form-group"><label>營業收入</label><input class="form-input" type="number" placeholder="0" id="inp_revenue"></div>
+      <div class="form-group"><label>銷貨成本</label><input class="form-input" type="number" placeholder="0"></div>
+      <div class="form-group"><label>銷售費用</label><input class="form-input" type="number" placeholder="0"></div>
+      <div class="form-group"><label>管理費用</label><input class="form-input" type="number" placeholder="0"></div>
+      <div class="form-group"><label>研發費用</label><input class="form-input" type="number" placeholder="0"></div>
+      <div class="form-group"><label>所得稅費用</label><input class="form-input" type="number" placeholder="0"></div>
+    </div>
+  </div></div>
+  <div class="save-notice" id="saveMsg">✅ 資料已儲存至本地端。</div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- FX MODAL -->
+<div class="modal-overlay" id="fxModal">
+  <div class="modal">
+    <div class="modal-title">💱 匯率設定</div>
+    <div class="fx-grid">
+      <div class="fx-input-group"><label>USD/TWD</label><input class="fx-input" id="fx_usd_twd" type="number" value="32.50" step="0.01"></div>
+      <div class="fx-input-group"><label>USD/VND</label><input class="fx-input" id="fx_usd_vnd" type="number" value="24850" step="10"></div>
+      <div class="fx-input-group"><label>USD/CNY</label><input class="fx-input" id="fx_usd_cny" type="number" value="7.28" step="0.01"></div>
+      <div class="fx-input-group"><label>更新日期</label><input class="fx-input" type="date" value="2025-06-15"></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeFxModal()">取消</button><button class="btn btn-primary" onclick="saveFxRates()">確認</button></div>
+  </div>
+</div>
+
+<!-- AI CHAT -->
+<div class="ai-chat-panel">
+  <div class="ai-chat-box" id="aiChatBox">
+    <div class="ai-chat-header"><div class="ai-chat-header-title"><div class="ai-dot"></div>CFO AI 財務顧問</div><button class="ai-chat-close" onclick="toggleChat()">✕</button></div>
+    <div class="ai-chat-messages" id="chatMessages">
+      <div class="msg ai"><div class="msg-bubble">您好！可詢問財務分析問題，例如：<br>「越南毛利率為何下滑？」<br>「移轉訂價風險如何因應？」</div></div>
+    </div>
+    <div class="ai-chat-input-area">
+      <input class="ai-chat-input" id="chatInput" placeholder="詢問財務問題..." onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="ai-send-btn" onclick="sendChat()">➤</button>
+    </div>
+  </div>
+  <button class="ai-chat-toggle" onclick="toggleChat()">✨ AI 財務顧問</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// STATE & API KEY
+// ══════════════════════════════════════════
+const S = { files:[], analysisType:'financial', apiKey:'' };
+try{ S.apiKey = localStorage.getItem('cfo_apikey')||''; }catch(e){}
+
+function saveApiKey(){
+  const key = document.getElementById('apikeyInput').value.trim();
+  if(!key.startsWith('sk-ant-')){ alert('API Key 格式不正確，應以 sk-ant- 開頭。'); return; }
+  S.apiKey = key;
+  try{ localStorage.setItem('cfo_apikey', key); }catch(e){}
+  const n = document.getElementById('apikeyNotice');
+  n.className = 'apikey-notice apikey-ok';
+  n.innerHTML = '<div class="apikey-notice-icon">✅</div><div><div class="apikey-notice-title">API Key 已設定，AI分析功能已啟用</div><div class="apikey-notice-text">Key已儲存於瀏覽器本地端。如需更換，請重新輸入。<br><a href="#" onclick="resetApiKey()" style="color:var(--accent);">更換API Key</a></div></div>';
+}
+function resetApiKey(){
+  S.apiKey=''; localStorage.removeItem('cfo_apikey');
+  location.reload();
+}
+function onApiKeyInput(){
+  const v = document.getElementById('apikeyInput').value;
+  if(v.startsWith('sk-ant-') && v.length > 20) document.querySelector('.apikey-save-btn').style.background='#166534';
+}
+
+// Pre-fill if saved
+window.addEventListener('load', ()=>{
+  if(S.apiKey){
+    const n = document.getElementById('apikeyNotice');
+    n.className='apikey-notice apikey-ok';
+    n.innerHTML='<div class="apikey-notice-icon">✅</div><div><div class="apikey-notice-title">API Key 已設定，AI分析功能已啟用</div><div class="apikey-notice-text">如需更換，請點此。<a href="#" onclick="resetApiKey()" style="color:var(--accent);margin-left:8px;">更換API Key</a></div></div>';
+  }
+  initDashboardCharts();
+});
+
+// ══════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════
+function showPage(id, navEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const p=document.getElementById('page-'+id); if(p)p.classList.add('active');
+  if(navEl)navEl.classList.add('active');
+  setTimeout(()=>initChartsForPage(id),60);
+}
+function setLang(btn){ document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+function openFxModal(){ document.getElementById('fxModal').classList.add('open'); }
+function closeFxModal(){ document.getElementById('fxModal').classList.remove('open'); }
+function saveFxRates(){ document.getElementById('fxBadgeText').textContent='USD/TWD '+document.getElementById('fx_usd_twd').value; closeFxModal(); }
+function toggleChat(){ document.getElementById('aiChatBox').classList.toggle('open'); }
+
+// ══════════════════════════════════════════
+// FILE PARSING ENGINE
+// ══════════════════════════════════════════
+function getFileIcon(name){
+  const ext=name.split('.').pop().toLowerCase();
+  return {pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',xlsm:'📊',ppt:'📑',pptx:'📑',txt:'📃',csv:'📋',md:'📃'}[ext]||'📎';
+}
+function formatBytes(b){ if(b<1024)return b+'B'; if(b<1048576)return (b/1024).toFixed(1)+'KB'; return (b/1048576).toFixed(1)+'MB'; }
+
+// ── READ FILE AS ARRAYBUFFER ──
+function readAsArrayBuffer(file){
+  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsArrayBuffer(file); });
+}
+function readAsText(file, encoding='UTF-8'){
+  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsText(file, encoding); });
+}
+function readAsBase64(file){
+  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); });
+}
+
+// ── EXTRACT TEXT FROM DOCX (XML inside ZIP) ──
+async function extractDocxText(file){
+  try{
+    const ab = await readAsArrayBuffer(file);
+    const zip = await JSZip.loadAsync(ab);
+    // word/document.xml contains the text
+    const docXml = await zip.file('word/document.xml').async('string');
+    // Strip XML tags, decode entities
+    let text = docXml
+      .replace(/<w:br[^>]*\/>/g,'\n')
+      .replace(/<w:p[ >][^>]*>/g,'\n')
+      .replace(/<[^>]+>/g,'')
+      .replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#x[0-9A-Fa-f]+;/g,' ')
+      .replace(/\n{3,}/g,'\n\n').trim();
+    return text.substring(0, 30000);
+  } catch(e){ throw new Error('DOCX解析失敗：'+e.message); }
+}
+
+// ── EXTRACT TEXT FROM XLSX ──
+async function extractXlsxText(file){
+  try{
+    const ab = await readAsArrayBuffer(file);
+    const zip = await JSZip.loadAsync(ab);
+    // Get shared strings
+    let sharedStrings = [];
+    const ssFile = zip.file('xl/sharedStrings.xml');
+    if(ssFile){
+      const ssXml = await ssFile.async('string');
+      const matches = ssXml.matchAll(/<t[^>]*>([^<]*)<\/t>/g);
+      for(const m of matches) sharedStrings.push(m[1].replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>'));
+    }
+    // Get sheet names
+    const workbookXml = await zip.file('xl/workbook.xml').async('string');
+    const sheetNames = [...workbookXml.matchAll(/name="([^"]+)"/g)].map(m=>m[1]);
+    let result = '';
+    // Parse each sheet
+    let sheetIdx = 1;
+    for(const name of sheetNames.slice(0,5)){
+      const sheetFile = zip.file(`xl/worksheets/sheet${sheetIdx}.xml`);
+      if(!sheetFile){ sheetIdx++; continue; }
+      const sheetXml = await sheetFile.async('string');
+      result += `\n【工作表：${name}】\n`;
+      const rows = sheetXml.matchAll(/<row[^>]*>(.*?)<\/row>/gs);
+      for(const row of rows){
+        const cells = [];
+        const cellMatches = row[1].matchAll(/<c [^>]*t="s"[^>]*>.*?<v>(\d+)<\/v>.*?<\/c>|<c[^>]*>.*?<v>([^<]*)<\/v>.*?<\/c>/gs);
+        for(const cell of cellMatches){
+          if(cell[1]!==undefined) cells.push(sharedStrings[parseInt(cell[1])]||'');
+          else if(cell[2]!==undefined) cells.push(cell[2]);
+        }
+        if(cells.some(c=>c.trim())) result += cells.join('\t') + '\n';
+      }
+      sheetIdx++;
+    }
+    return result.substring(0,30000);
+  } catch(e){ throw new Error('Excel解析失敗：'+e.message); }
+}
+
+// ── EXTRACT TEXT FROM PPTX ──
+async function extractPptxText(file){
+  try{
+    const ab = await readAsArrayBuffer(file);
+    const zip = await JSZip.loadAsync(ab);
+    let result = '';
+    const slideFiles = Object.keys(zip.files).filter(k=>k.match(/^ppt\/slides\/slide\d+\.xml$/)).sort();
+    for(let i=0;i<Math.min(slideFiles.length,20);i++){
+      const xml = await zip.files[slideFiles[i]].async('string');
+      const text = xml.replace(/<a:br\/>/g,'\n').replace(/<\/a:p>/g,'\n').replace(/<[^>]+>/g,'')
+        .replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/\n{3,}/g,'\n\n').trim();
+      result += `\n【第${i+1}張投影片】\n${text}\n`;
+    }
+    return result.substring(0,30000);
+  } catch(e){ throw new Error('PPTX解析失敗：'+e.message); }
+}
+
+// ── MASTER EXTRACTOR ──
+async function extractText(file){
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(['txt','csv','md'].includes(ext)){
+    return await readAsText(file);
+  } else if(['docx','doc'].includes(ext)){
+    return await extractDocxText(file);
+  } else if(['xlsx','xls','xlsm'].includes(ext)){
+    return await extractXlsxText(file);
+  } else if(['pptx','ppt'].includes(ext)){
+    return await extractPptxText(file);
+  } else if(ext==='pdf'){
+    return null; // PDF: send as base64 to API directly
+  }
+  throw new Error('不支援的檔案格式：'+ext);
+}
+
+// ══════════════════════════════════════════
+// FILE LIST MANAGEMENT
+// ══════════════════════════════════════════
+async function processFiles(fileList){
+  for(const file of fileList){
+    if(S.files.find(f=>f.name===file.name&&f.size===file.size)) continue;
+    if(file.size > 15*1024*1024){ alert(`「${file.name}」超過15MB上限`); continue; }
+    const id='f_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
+    const entry={ id, name:file.name, size:file.size, ext:file.name.split('.').pop().toLowerCase(), icon:getFileIcon(file.name), status:'loading', extractedText:null, base64:null, previewText:'' };
+    S.files.push(entry);
+    renderFileList(); updateUploadUI();
+    try{
+      const ext = entry.ext;
+      if(ext==='pdf'){
+        entry.base64 = await readAsBase64(file);
+        entry.previewText = '（PDF格式：直接送入AI分析）';
+      } else {
+        entry.extractedText = await extractText(file);
+        entry.previewText = entry.extractedText.substring(0,200)+'...';
+      }
+      entry.status = 'ready';
+    } catch(e){
+      entry.status = 'error';
+      entry.errorMsg = e.message;
+    }
+    renderFileList(); updateUploadUI();
+  }
+}
+
+function onFileSelect(e){ processFiles(Array.from(e.target.files)); e.target.value=''; }
+function onDragOver(e){ e.preventDefault(); document.getElementById('uploadZone').classList.add('drag-over'); }
+function onDragLeave(){ document.getElementById('uploadZone').classList.remove('drag-over'); }
+function onDrop(e){ e.preventDefault(); onDragLeave(); processFiles(Array.from(e.dataTransfer.files)); }
+
+function updateUploadUI(){
+  const has = S.files.length>0;
+  document.getElementById('analysisTypeCard').style.display = has?'block':'none';
+  document.getElementById('fileListSection').style.display = has?'block':'none';
+  document.getElementById('clearAllBtn').style.display = has?'flex':'none';
+  document.getElementById('analyzeAllBtn').style.display = has?'flex':'none';
+  document.getElementById('fileCountBadge').textContent = `共 ${S.files.length} 個文件`;
+}
+
+function renderFileList(){
+  document.getElementById('fileList').innerHTML = S.files.map(f=>`
+    <div class="file-item" id="fi_${f.id}">
+      <div class="file-item-icon">${f.icon}</div>
+      <div class="file-item-info">
+        <div class="file-item-name" title="${f.name}">${f.name}</div>
+        <div class="file-item-meta">${formatBytes(f.size)} · ${f.ext.toUpperCase()}</div>
+        ${f.status==='ready'&&f.previewText?`<div class="file-item-extract">✓ 已解析：${f.previewText.substring(0,60)}…</div>`:''}
+        ${f.status==='error'?`<div style="font-size:10px;color:var(--danger);margin-top:2px;">❌ ${f.errorMsg||'解析失敗'}</div>`:''}
+      </div>
+      ${f.status==='loading'?'<span class="file-status-badge loading">⏳ 解析中</span>':''}
+      ${f.status==='ready'?'<span class="file-status-badge ready">✅ 就緒</span>':''}
+      ${f.status==='analyzing'?'<span class="file-status-badge analyzing">🔄 分析中</span>':''}
+      ${f.status==='done'?'<span class="file-status-badge done">✨ 完成</span>':''}
+      ${f.status==='error'?'<span class="file-status-badge error">❌ 錯誤</span>':''}
+      <button class="file-remove" onclick="removeFile('${f.id}')">✕</button>
+      ${f.status==='analyzing'?`<div class="file-progress" id="fp_${f.id}" style="width:0%"></div>`:''}
+    </div>`).join('');
+}
+
+function removeFile(id){ S.files=S.files.filter(f=>f.id!==id); renderFileList(); updateUploadUI(); document.getElementById('result_'+id)?.remove(); }
+function clearAllFiles(){ S.files=[]; renderFileList(); updateUploadUI(); document.getElementById('analysisResultsSection').innerHTML=''; }
+function selectType(el,type){ document.querySelectorAll('.analysis-option').forEach(o=>o.classList.remove('selected')); el.classList.add('selected'); S.analysisType=type; document.getElementById('customPromptArea').style.display=type==='custom'?'block':'none'; }
+
+// ══════════════════════════════════════════
+// ANALYZE
+// ══════════════════════════════════════════
+const SYS_PROMPT = `你是一位跨國集團CFO兼國際稅務顧問，精通台灣、越南、大陸三地財務、稅務、海關、關聯交易、Transfer Pricing、VAT、台商查核風險。集團背景：台灣母公司（控股銷售）、越南製造基地（塑膠射出/車用配件OEM/ODM）、大陸研發製造，美國市場占90%。請以稅局查核角度、CFO風險管理角度、經營管理角度分析。若涉及合約/稅務函文/移轉訂價/增值稅/境外所得/PE風險，請指出：稅局可能質疑點、證據不足處、潛在補稅風險（含估算金額）、可補強資料、建議修正方向。請用繁體中文，分段落結構化呈現。`;
+
+function getAnalysisPrompt(type, fname){
+  const custom = document.getElementById('customPromptInput').value.trim();
+  const p={
+    financial:`請分析文件「${fname}」的財務數據：\n1.【財務數字擷取】列出所有關鍵財務數字（含幣別與期間）\n2.【KPI計算】毛利率、淨利率、EBITDA率等\n3.【三地歸屬】台灣/越南/大陸各實體\n4.【異常警示】偏離正常水位的數字\n5.【CFO建議】2-3項重點關注事項`,
+    tax:`請以稅局查核角度分析「${fname}」：\n1.【文件類型】函文/申報書/查核通知等\n2.【涉及稅種】企業所得稅/VAT/增值稅/扣繳稅等\n3.【稅局質疑點】逐條列出\n4.【潛在補稅風險】估算金額與依據\n5.【補強文件清單】應準備的佐證資料\n6.【因應建議】具體稅務因應策略`,
+    tp:`請以移轉訂價專家角度分析「${fname}」：\n1.【關聯交易識別】所有集團內關聯交易\n2.【定價方法評估】是否符合常規交易原則\n3.【毛利率分析】各交易類型毛利率，與常規區間比對\n4.【TP風險評級】高/中/低\n5.【備查文件缺口】不足之處\n6.【稅局質疑預判】可能發函的具體問題`,
+    contract:`請以CFO法務角度分析合約「${fname}」：\n1.【合約性質】銷售/採購/服務/授權/貸款等\n2.【財務條款】金額、付款條件、定價條款\n3.【不利條款】對集團不利的財務條款\n4.【稅務影響】台灣/越南/大陸稅務影響\n5.【關聯交易】TP合規性評估\n6.【修正建議】具體條款修改建議`,
+    report:`請將「${fname}」轉換為CFO級執行摘要：\n1.【30秒摘要】最重要的3個數字/結論（適合向董事會報告）\n2.【財務健康度】整體評分(1-10)及理由\n3.【三地績效對比】台灣/越南/大陸各自表現\n4.【風險警示】最需CFO立即關注的2-3項風險\n5.【行動建議】本月/本季CFO應採取的具體行動\n6.【稅務提醒】即將到期的稅務申報或風險事項`,
+    custom: custom||`請分析「${fname}」的財務與稅務相關內容，從CFO角度提出重點摘要與風險提示。`
+  };
+  return p[type]||p.financial;
+}
+
+async function analyzeAllFiles(){
+  if(!S.apiKey){ alert('請先設定 Anthropic API Key！\n（頁面上方橘色提示框中輸入）'); return; }
+  const ready = S.files.filter(f=>f.status==='ready');
+  if(!ready.length){ alert('請等待文件解析完成（顯示「✅ 就緒」）再分析。'); return; }
+  for(const f of ready) await analyzeFile(f);
+}
+
+async function analyzeFile(file){
+  file.status='analyzing'; renderFileList();
+  let prog=0;
+  const pi=setInterval(()=>{ prog=Math.min(prog+Math.random()*6,88); const b=document.getElementById('fp_'+file.id); if(b)b.style.width=prog+'%'; },500);
+
+  const sec=document.getElementById('analysisResultsSection');
+  const aid='an_'+file.id;
+  sec.insertAdjacentHTML('beforeend',`
+    <div class="analyzing-card" id="${aid}">
+      <div class="analyzing-animation"><div class="analyzing-dot"></div><div class="analyzing-dot"></div><div class="analyzing-dot"></div></div>
+      <div style="font-size:15px;font-weight:700;color:var(--primary);margin-bottom:4px;">AI 正在分析「${file.name}」</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">CFO + 稅務顧問角色 · 三地業務背景深度分析</div>
+      <div class="progress-steps">
+        <div class="progress-step"><div class="step-icon done">✓</div>文件讀取完成</div>
+        <div class="progress-step"><div class="step-icon done">✓</div>${file.ext==='pdf'?'PDF轉為AI可讀格式':'瀏覽器端文字解析完成'}</div>
+        <div class="progress-step"><div class="step-icon active">◎</div>送入AI進行財務分析...</div>
+        <div class="progress-step"><div class="step-icon wait">○</div>生成結構化分析報告</div>
+      </div>
+    </div>`);
+  document.getElementById(aid).scrollIntoView({behavior:'smooth',block:'center'});
+
+  try{
+    const userPrompt = getAnalysisPrompt(S.analysisType, file.name);
+    let messages;
+    if(file.ext==='pdf' && file.base64){
+      messages=[{role:'user',content:[{type:'document',source:{type:'base64',media_type:'application/pdf',data:file.base64}},{type:'text',text:userPrompt}]}];
+    } else if(file.extractedText){
+      const content = `文件名稱：${file.name}\n\n文件內容（已解析）：\n${file.extractedText}\n\n${userPrompt}`;
+      messages=[{role:'user',content}];
+    } else {
+      throw new Error('文件內容為空，請確認文件有文字內容。');
+    }
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1000, system:SYS_PROMPT, messages })
+    });
+
+    if(!resp.ok){
+      const err=await resp.json().catch(()=>({}));
+      throw new Error(`API錯誤 ${resp.status}：${err?.error?.message||resp.statusText}`);
+    }
+    const data=await resp.json();
+    const text=data.content?.[0]?.text||'分析失敗，請重試。';
+
+    clearInterval(pi); file.status='done'; renderFileList();
+    document.getElementById(aid)?.remove();
+    renderResult(file, text);
+  } catch(e){
+    clearInterval(pi); file.status='error'; file.errorMsg=e.message; renderFileList();
+    document.getElementById(aid)?.remove();
+    renderError(file, e.message);
+  }
+}
+
+function renderResult(file, text){
+  const typeLabel={financial:'財務數據擷取',tax:'稅務合規分析',tp:'移轉訂價審閱',contract:'合約法務分析',report:'財務報告摘要',custom:'自定義分析'}[S.analysisType]||'AI分析';
+  // Format: highlight risk phrases
+  let fmt = text
+    .replace(/【([^】]+)】/g,'<strong style="color:var(--primary)">【$1】</strong>')
+    .replace(/(⚠️[^\n]+)/g,'<div class="result-highlight">$1</div>')
+    .replace(/(🔴[^\n]+)/g,'<div class="result-risk">$1</div>')
+    .replace(/(✅[^\n]+)/g,'<div class="result-ok">$1</div>')
+    .replace(/\n/g,'<br>');
+  document.getElementById('analysisResultsSection').insertAdjacentHTML('beforeend',`
+    <div class="analysis-result" id="result_${file.id}">
+      <div class="result-header">
+        <div><div class="result-title">${file.icon} ${file.name}</div><div class="result-meta">${typeLabel} · ${new Date().toLocaleTimeString('zh-TW')}</div></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" style="background:rgba(255,255,255,.15);color:white;font-size:11px;" onclick="copyResult('rtxt_${file.id}')">📋 複製</button>
+          <button class="btn" style="background:rgba(255,255,255,.15);color:white;font-size:11px;" onclick="document.getElementById('result_${file.id}').remove()">✕</button>
+        </div>
+      </div>
+      <div class="result-body"><div id="rtxt_${file.id}" class="result-text">${fmt}</div></div>
+    </div>`);
+  document.getElementById('result_'+file.id).scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderError(file, msg){
+  let hint='';
+  if(msg.includes('fetch')||msg.includes('Failed')){
+    hint=`<div class="error-steps">
+      <div class="error-step">💡 <span><strong>最常見原因：HTML從本機(file://)開啟，瀏覽器阻擋跨來源請求。</strong><br>解決方法：請用 Chrome 或 Edge 開啟，並確認已允許網路存取。</span></div>
+      <div class="error-step">💡 <span>也可以將此 HTML 檔案放到本機 web server（如 VS Code Live Server）再開啟。</span></div>
+      <div class="error-step">💡 <span>或直接在 claude.ai 的 Artifact 功能中使用（已自動解決CORS問題）。</span></div>
+    </div>`;
+  } else if(msg.includes('401')||msg.includes('403')||msg.includes('authentication')){
+    hint='<div class="error-steps"><div class="error-step">🔑 <span>API Key 無效或已過期，請重新設定正確的 API Key。</span></div></div>';
+  } else if(msg.includes('解析失敗')||msg.includes('parse')){
+    hint='<div class="error-steps"><div class="error-step">📄 <span>文件內容解析失敗，請確認文件有正常文字內容（非掃描圖片）。</span></div></div>';
+  }
+  document.getElementById('analysisResultsSection').insertAdjacentHTML('beforeend',`
+    <div class="card mb-20" id="result_${file.id}" style="border-left:4px solid var(--danger);">
+      <div class="card-body">
+        <div class="error-box">
+          <div class="error-box-title">❌「${file.name}」分析失敗</div>
+          <div class="error-box-text">${msg}</div>
+          ${hint}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn btn-primary" style="font-size:12px;" onclick="retryFile('${file.id}')">🔄 重試</button>
+          <button class="btn btn-outline" style="font-size:12px;" onclick="document.getElementById('result_${file.id}').remove()">關閉</button>
+        </div>
+      </div>
+    </div>`);
+}
+
+function retryFile(id){ const f=S.files.find(f=>f.id===id); if(f){f.status='ready';document.getElementById('result_'+id)?.remove();analyzeFile(f);} }
+function copyResult(id){ const el=document.getElementById(id); if(el) navigator.clipboard.writeText(el.innerText).then(()=>alert('已複製到剪貼簿')); }
+
+// ══════════════════════════════════════════
+// AI CHAT & SUMMARY
+// ══════════════════════════════════════════
+async function callAPI(userMsg, systemMsg){
+  if(!S.apiKey) throw new Error('請先設定API Key');
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:systemMsg,messages:[{role:'user',content:userMsg}]})
+  });
+  if(!resp.ok){ const e=await resp.json().catch(()=>({})); throw new Error(`API ${resp.status}: ${e?.error?.message||resp.statusText}`); }
+  const data=await resp.json();
+  return data.content?.[0]?.text||'';
+}
+
+async function generateAISummary(e){
+  if(!S.apiKey){ alert('請先設定 Anthropic API Key'); return; }
+  const btn=e.target; btn.textContent='⏳ 分析中...'; btn.disabled=true;
+  const textEl=document.getElementById('aiSummaryText');
+  textEl.innerHTML='<div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.7)"><div style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite"></div>AI正在分析本月財務數據...</div>';
+  try{
+    const text=await callAPI(`請根據以下2025年6月財務數據，以繁體中文撰寫120字以內的執行長級財務摘要，含整體表現、注意事項、稅務風險提示。直接輸出，不要前言。\n數據：合併營收USD4,280K(MoM+3.2%,達成率95.1%)、毛利率21.8%(目標25%)、EBITDA USD892K、台灣毛利率28.4%(正常)、越南毛利率18.3%(低於警戒線20%,連2月下滑)、台越TP毛利率11.2%(常規區間10~18%,接近下限)、越南CIT Q2截止7/30、集團現金USD3,140K、VND升值2.3%導致匯兌損失USD42K`,'你是跨國集團CFO，精通三地財務稅務，請用繁體中文撰寫精簡財務摘要。');
+    textEl.innerHTML=text;
+  } catch(err){
+    textEl.innerHTML='<span style="color:#FCA5A5">⚠️ AI呼叫失敗：'+err.message+'</span>';
+  }
+  btn.textContent='✨ AI更新摘要'; btn.disabled=false;
+}
+
+async function sendChat(){
+  const input=document.getElementById('chatInput'); const msg=input.value.trim(); if(!msg)return;
+  input.value='';
+  const msgs=document.getElementById('chatMessages');
+  msgs.innerHTML+=`<div class="msg user"><div class="msg-bubble">${msg}</div></div>`;
+  msgs.innerHTML+=`<div class="msg ai" id="aiTyping"><div class="msg-bubble" style="color:var(--text-muted)">分析中...</div></div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+  try{
+    const reply=await callAPI(`集團背景：台灣母公司+越南製造+大陸研發，塑膠射出/車用配件，美國市場90%。當前數據：合併營收USD4,280K，越南毛利率18.3%(警戒)，台越TP毛利率11.2%(接近下限10%)，集團現金USD3,140K。\n問題：${msg}`,'你是跨國集團CFO的AI財務顧問，請用繁體中文回答，150字以內，專業精確。');
+    document.getElementById('aiTyping').outerHTML=`<div class="msg ai"><div class="msg-bubble">${reply}</div></div>`;
+  } catch(err){
+    document.getElementById('aiTyping').outerHTML=`<div class="msg ai"><div class="msg-bubble" style="color:var(--danger)">錯誤：${err.message}</div></div>`;
+  }
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+// ══════════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════════
+const charts={};
+function dc(id){ if(charts[id]){charts[id].destroy();delete charts[id];} }
+const months=['1月','2月','3月','4月','5月','6月'];
+function initChartsForPage(p){
+  if(p==='dashboard') initDashboardCharts();
+  else if(p==='pnl') initChart('pnlChart','line',{labels:months,datasets:[{label:'營收',data:[3820,3950,4100,3980,4148,4280],borderColor:'#0EA5E9',tension:.4,fill:false,pointRadius:3},{label:'毛利',data:[860,892,898,845,910,933],borderColor:'#10B981',tension:.4,fill:false,pointRadius:3}]},v=>'$'+v+'K');
+  else if(p==='tax') initChart('taxChart','line',{labels:months,datasets:[{label:'台灣',data:[18.4,18.2,18.5,18.1,18.3,18.2],borderColor:'#0EA5E9',tension:.4,pointRadius:3,fill:false},{label:'越南',data:[12.1,12.4,12.2,12.6,12.3,12.4],borderColor:'#10B981',tension:.4,pointRadius:3,fill:false},{label:'大陸',data:[15.2,15.0,15.1,14.9,15.1,15.0],borderColor:'#F59E0B',tension:.4,pointRadius:3,fill:false}]},v=>v+'%');
+  else if(p==='budget') initChart('budgetChart','bar',{labels:months,datasets:[{label:'達成率%',data:[88,84,86,79,82,81],backgroundColor:'rgba(14,165,233,.7)',borderRadius:4},{label:'目標100%',data:[100,100,100,100,100,100],borderColor:'#10B981',borderWidth:2,type:'line',fill:false,pointRadius:0,borderDash:[5,4]}]},v=>v+'%',{min:70,max:110});
+  else if(p==='balance'){ dc('bsChart'); const c=document.getElementById('bsChart'); if(!c)return; charts['bsChart']=new Chart(c,{type:'doughnut',data:{labels:['流動資產','非流動資產','流動負債','非流動負債','股東權益'],datasets:[{data:[6840,11560,3140,3940,11320],backgroundColor:['#0EA5E9','#3B82F6','#EF4444','#F97316','#10B981'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},color:'#64748B'}}}}}); }
+  else if(p==='cashflow') initChart('cfChart','bar',{labels:months,datasets:[{label:'營運',data:[720,840,680,920,780,842],backgroundColor:'rgba(16,185,129,.7)',borderRadius:4},{label:'投資',data:[-280,-150,-420,-180,-240,-320],backgroundColor:'rgba(239,68,68,.6)',borderRadius:4},{label:'融資',data:[-120,-180,-90,-240,-150,-180],backgroundColor:'rgba(245,158,11,.6)',borderRadius:4}]},v=>'$'+v+'K');
+}
+function initChart(id,type,data,tickFmt,yOpts={}){
+  dc(id); const c=document.getElementById(id); if(!c)return;
+  charts[id]=new Chart(c,{type,data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},color:'#64748B',boxWidth:14}}},scales:{y:{...yOpts,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:tickFmt,color:'#94A3B8',font:{size:10}}},x:{grid:{display:false},ticks:{color:'#94A3B8',font:{size:10}}}}}});
+}
+function initDashboardCharts(){
+  dc('revenueTrendChart'); const c=document.getElementById('revenueTrendChart'); if(!c)return;
+  charts['revenueTrendChart']=new Chart(c,{type:'bar',data:{labels:months,datasets:[{label:'實際',data:[3820,3950,4100,3980,4148,4280],backgroundColor:'rgba(14,165,233,.15)',borderColor:'#0EA5E9',borderWidth:2,borderRadius:6},{label:'預算',data:[4000,4100,4200,4150,4300,4500],borderColor:'#F59E0B',borderWidth:2,type:'line',fill:false,pointRadius:3,tension:.4,borderDash:[5,4]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},color:'#64748B',boxWidth:14}}},scales:{y:{beginAtZero:false,min:3500,grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#94A3B8',font:{size:10},callback:v=>'$'+(v/1000).toFixed(1)+'M'}},x:{grid:{display:false},ticks:{color:'#94A3B8',font:{size:10}}}}}});
+}
+
+function saveData(){ const msg=document.getElementById('saveMsg'); msg.style.display='block'; setTimeout(()=>msg.style.display='none',3000); }
+
+// CSS spin anim
+const style=document.createElement('style');
+style.textContent='@keyframes spin{to{transform:rotate(360deg)}}';
+document.head.appendChild(style);
+</script>
+</body>
+</html>
